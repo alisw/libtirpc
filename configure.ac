@@ -10,6 +10,7 @@ AC_ARG_ENABLE(gssapi,
 AM_CONDITIONAL(GSS, test "x$enable_gssapi" = xyes)
 
 if test "x$enable_gssapi" = xyes; then
+	AC_DEFINE([HAVE_GSSAPI], [1], [Define to 1 if GSSAPI is enabled])
 	GSSAPI_CFLAGS=`krb5-config --cflags gssapi`
 	GSSAPI_LIBS=`krb5-config --libs gssapi`
 	AC_SUBST([GSSAPI_CFLAGS])
@@ -41,7 +42,7 @@ AC_ARG_ENABLE(symvers,
 AM_CONDITIONAL(SYMVERS, test "x$enable_symvers" = xyes)
 
 AC_PROG_CC
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([config.h tirpc/tirpc-features.h])
 AC_PROG_LIBTOOL
 AC_HEADER_DIRENT
 AC_PREFIX_DEFAULT(/usr)

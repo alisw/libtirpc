@@ -4,9 +4,11 @@ ACLOCAL_AMFLAGS = -I m4
 noinst_HEADERS	       = tirpc/reentrant.h \
 			 tirpc/getpeereid.h \
 			 tirpc/libc_private.h \
-			 tirpc/un-namespace.h
+			 tirpc/un-namespace.h \
+			 tirpc/tirpc-features.h.in
 
 nobase_include_HEADERS = tirpc/netconfig.h \
+			 tirpc/tirpc-features.h \
 			 tirpc/rpcsvc/crypt.x \
 			 tirpc/rpcsvc/crypt.h \
 			 tirpc/rpc/xdr.h \

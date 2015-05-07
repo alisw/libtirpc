@@ -35,6 +35,8 @@
 #ifndef _TIRPC_RPC_H
 #define _TIRPC_RPC_H
 
+#include <tirpc-features.h>
+
 #include <rpc/types.h>		/* some typedefs */
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -60,7 +62,7 @@
 #include <rpc/auth_des.h>	/* protocol for des style cred */
 #endif /* HAVE_AUTHDES */
 
-#ifdef HAVE_RPCSEC_GSS
+#ifdef HAVE_GSSAPI
 #include <rpc/auth_gss.h>   /* RPCSEC_GSS */
 #endif
 

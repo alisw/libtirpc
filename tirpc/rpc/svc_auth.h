@@ -41,6 +41,10 @@
 #ifndef _RPC_SVC_AUTH_H
 #define _RPC_SVC_AUTH_H
 
+#include <tirpc-features.h>
+
+#ifdef HAVE_GSSAPI
+
 #include <rpc/rpcsec_gss.h>
 
 typedef struct {
@@ -50,6 +54,8 @@ typedef struct {
 	void			*context;
 	u_int			seq_num;
 } svc_rpc_gss_parms_t;
+
+#endif /* HAVE_GSSAPI */
 
 /*
  * Interface to server-side authentication flavors.
@@ -63,8 +69,10 @@ typedef struct SVCAUTH {
 		int     (*svc_ah_destroy)(struct SVCAUTH *);
 		} *svc_ah_ops;
 	caddr_t svc_ah_private;
+#ifdef HAVE_GSSAPI
 	svc_rpc_gss_parms_t svc_gss_params;
 	rpc_gss_rawcred_t raw_cred;
+#endif
 } SVCAUTH;
 
 #define SVCAUTH_WRAP(auth, xdrs, xfunc, xwhere) \
