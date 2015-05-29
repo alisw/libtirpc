@@ -10,8 +10,12 @@ AC_ARG_ENABLE(gssapi,
 AM_CONDITIONAL(GSS, test "x$enable_gssapi" = xyes)
 
 if test "x$enable_gssapi" = xyes; then
-	GSSAPI_CFLAGS=`krb5-config --cflags gssapi`
-	GSSAPI_LIBS=`krb5-config --libs gssapi`
+	AC_CHECK_TOOL([KRB5_CONFIG], [krb5-config], [no])
+	if test "x$KRB5_CONFIG" = xno; then
+		AC_MSG_ERROR([krb5-config tool not found. Use --disable-gssapi, or install Kerberos.])
+	fi
+	GSSAPI_CFLAGS=`${KRB5_CONFIG} --cflags gssapi`
+	GSSAPI_LIBS=`${KRB5_CONFIG} --libs gssapi`
 	AC_SUBST([GSSAPI_CFLAGS])
 	AC_SUBST([GSSAPI_LIBS])
 fi
