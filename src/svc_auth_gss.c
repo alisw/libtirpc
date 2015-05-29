@@ -99,7 +99,8 @@ struct svc_rpc_gss_data {
 	u_int			seqlast;	/* last sequence number */
 	u_int32_t		seqmask;	/* bitmask of seqnums */
 	gss_name_t		client_name;	/* unparsed name string */
-	rpc_gss_rawcred_t	rcred;		/* raw credential */
+	rpc_gss_rawcred_t	rcred;		/* internal raw credential */
+	rpc_gss_rawcred_t	scratch;	/* copy exposed to user */
 	rpc_gss_ucred_t		ucred;		/* cooked credential */
 	gid_t			gids[NGRPS];	/* list of groups */
 	bool_t			callback_done;	/* TRUE after callback */
@@ -917,11 +918,11 @@ rpc_gss_getcred(struct svc_req *rqst, rpc_gss_rawcred_t **rcred,
 	gd = SVCAUTH_PRIVATE(auth);
 
 	if (rcred != NULL) {
-		auth->raw_cred = gd->rcred;
-		auth->raw_cred.service = _rpc_gss_svc_to_service(gd->sec.svc);
-		(void)rpc_gss_num_to_qop(auth->raw_cred.mechanism, gd->sec.qop,
-						&auth->raw_cred.qop);
-		*rcred = &auth->raw_cred;
+		gd->scratch = gd->rcred;
+		gd->scratch.service = _rpc_gss_svc_to_service(gd->sec.svc);
+		(void)rpc_gss_num_to_qop(gd->scratch.mechanism, gd->sec.qop,
+						&gd->scratch.qop);
+		*rcred = &gd->scratch;
 	}
 
 	if (ucred != NULL) {
