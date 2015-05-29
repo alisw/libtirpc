@@ -34,8 +34,6 @@ libtirpc.pc
 lib*.a
 src/libtirpc.la
 src/libtirpc_la-*.lo
-tirpc/stamp-h2
-tirpc/tirpc-features.h
 # generic editor backup et al
 *~
 .stgitmail.txt
