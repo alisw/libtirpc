@@ -29,7 +29,6 @@
 #ifndef _TIRPC_RPCSEC_GSS_H
 #define _TIRPC_RPCSEC_GSS_H
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
 
 #include <rpc/auth.h>
@@ -107,7 +106,10 @@ typedef gss_OID_desc rpc_gss_OID_desc;
 typedef rpc_gss_OID_desc *rpc_gss_OID;
 
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 AUTH	*rpc_gss_seccreate(CLIENT *, char *, char *, rpc_gss_service_t,
 				char *, rpc_gss_options_req_t *,
 				rpc_gss_options_ret_t *);
@@ -127,6 +129,9 @@ bool_t	rpc_gss_get_versions(u_int *, u_int *);
 bool_t	rpc_gss_is_installed(char *);
 bool_t	rpc_gss_mech_to_oid(char *, rpc_gss_OID *);
 bool_t	rpc_gss_qop_to_num(char *, char *, u_int *);
-__END_DECLS
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* !_TIRPC_RPCSEC_GSS_H */
