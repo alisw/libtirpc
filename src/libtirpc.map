@@ -28,13 +28,13 @@ TIRPC_0.3.0 {
     _authenticate;
     _get_next_token;
     _gss_authenticate;
-    _svcauth_gss;
     _null_auth;
     _rpc_dtablesize;
     _seterr_reply;
     _svcauth_none;
     _svcauth_short;
     _svcauth_unix;
+    _svcauth_gss;
 
     # a*
     authdes_create;
@@ -279,6 +279,12 @@ TIRPC_0.3.0 {
   local:
     *;
 };
+
+TIRPC_0.3.1 {
+    svcauth_gss_get_principal;
+    svcauth_gss_set_svc_name;
+} TIRPC_0.3.0;
+
 TIRPC_PRIVATE {
   global:
     __libc_clntudp_bufcreate;

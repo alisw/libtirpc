@@ -37,7 +37,8 @@ nobase_include_HEADERS = tirpc/netconfig.h \
 if GSS
 nobase_include_HEADERS += \
 			 tirpc/rpc/rpcsec_gss.h \
-			 tirpc/rpc/auth_gss.h
+			 tirpc/rpc/auth_gss.h \
+			 tirpc/rpc/svc_auth_gss.h
 endif
 
 if AUTHDES
