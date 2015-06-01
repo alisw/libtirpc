@@ -144,6 +144,8 @@ struct rpc_gss_data {
 	gss_ctx_id_t		 ctx;		/* context id */
 	struct rpc_gss_cred	 gc;		/* client credentials */
 	u_int			 win;		/* sequence window */
+	int			 time_req;	/* init_sec_context time_req */
+	gss_channel_bindings_t	 icb;		/* input channel bindings */
 };
 
 #define	AUTH_PRIVATE(auth)	((struct rpc_gss_data *)auth->ah_private)
@@ -458,8 +460,8 @@ _rpc_gss_refresh(AUTH *auth, rpc_gss_options_ret_t *options_ret)
 						gd->name,
 						gd->sec.mech,
 						gd->sec.req_flags,
-						0,		/* time req */
-						NULL,		/* channel */
+						gd->time_req,
+						gd->icb,
 						recv_tokenp,
 						&actual_mech_type,
 						&send_token,
@@ -772,11 +774,6 @@ rpc_gss_seccreate(CLIENT *clnt, char *principal, char *mechanism,
 		return _rpc_gss_seccreate_error(ENOENT);
 	}
 
-	if (req != NULL) {
-		sec.req_flags = req->req_flags;
-		sec.cred = req->my_cred;
-	}
-
 	if (ret == NULL)
 		ret = &options_ret;
 	memset(ret, 0, sizeof(*ret));
@@ -805,6 +802,13 @@ rpc_gss_seccreate(CLIENT *clnt, char *principal, char *mechanism,
 	gd->clnt = clnt;
 	gd->ctx = GSS_C_NO_CONTEXT;
 	gd->sec = sec;
+
+	if (req) {
+		sec.req_flags = req->req_flags;
+		gd->time_req = req->time_req;
+		sec.cred = req->my_cred;
+		gd->icb = req->input_channel_bindings;
+	}
 
 	gd->gc.gc_v = RPCSEC_GSS_VERSION;
 	gd->gc.gc_proc = RPCSEC_GSS_INIT;
