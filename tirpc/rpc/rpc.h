@@ -60,10 +60,6 @@
 #include <rpc/auth_des.h>	/* protocol for des style cred */
 #endif /* HAVE_AUTHDES */
 
-#ifdef HAVE_RPCSEC_GSS
-#include <rpc/auth_gss.h>   /* RPCSEC_GSS */
-#endif
-
 /* Server side only remote procedure callee */
 #include <rpc/svc_auth.h>	/* service side authenticator */
 #include <rpc/svc.h>		/* service manager and multiplexer */

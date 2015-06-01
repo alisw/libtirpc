@@ -44,6 +44,7 @@
 #include <grp.h>
 
 #include <rpc/rpc.h>
+#include <rpc/auth_gss.h>
 #include <rpc/rpcsec_gss.h>
 
 #include <gssapi/gssapi_ext.h>
