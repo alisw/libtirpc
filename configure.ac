@@ -3,6 +3,9 @@ AM_INIT_AUTOMAKE([silent-rules])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/auth_des.c])
 AC_CONFIG_MACRO_DIR([m4])
+AC_PROG_CC
+
+AC_CHECK_HEADER([gssapi/gssapi.h], [HAVE_GSSAPI_H=yes], [HAVE_GSSAPI_H=no])
 
 AC_ARG_ENABLE(gssapi,
 	[AC_HELP_STRING([--disable-gssapi], [Disable GSSAPI support @<:@default=no@:>@])],
@@ -10,6 +13,9 @@ AC_ARG_ENABLE(gssapi,
 AM_CONDITIONAL(GSS, test "x$enable_gssapi" = xyes)
 
 if test "x$enable_gssapi" = xyes; then
+	if test "x$HAVE_GSSAPI_H" = xno; then
+		AC_MSG_ERROR([gssapi.h not found. Use --disable-gssapi, or install GSS-API.])
+	fi
 	AC_CHECK_TOOL([KRB5_CONFIG], [krb5-config], [no])
 	if test "x$KRB5_CONFIG" = xno; then
 		AC_MSG_ERROR([krb5-config tool not found. Use --disable-gssapi, or install Kerberos.])
@@ -44,7 +50,6 @@ AC_ARG_ENABLE(symvers,
       [],[enable_symvers=yes])
 AM_CONDITIONAL(SYMVERS, test "x$enable_symvers" = xyes)
 
-AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_LIBTOOL
 AC_HEADER_DIRENT
