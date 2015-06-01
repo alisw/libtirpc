@@ -17,7 +17,6 @@ nobase_include_HEADERS = tirpc/netconfig.h \
 			 tirpc/rpc/svc_auth.h \
 			 tirpc/rpc/rpc_msg.h \
 			 tirpc/rpc/rpc.h \
-			 tirpc/rpc/rpcsec_gss.h \
 			 tirpc/rpc/rpcent.h \
 			 tirpc/rpc/rpc_com.h \
 			 tirpc/rpc/rpcb_prot.x \
@@ -33,8 +32,13 @@ nobase_include_HEADERS = tirpc/netconfig.h \
 			 tirpc/rpc/clnt.h \
 			 tirpc/rpc/auth_unix.h \
 			 tirpc/rpc/auth_kerb.h \
-			 tirpc/rpc/auth.h \
+			 tirpc/rpc/auth.h
+
+if GSS
+nobase_include_HEADERS += \
+			 tirpc/rpc/rpcsec_gss.h \
 			 tirpc/rpc/auth_gss.h
+endif
 
 if AUTHDES
 nobase_include_HEADERS += \

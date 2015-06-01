@@ -19,7 +19,10 @@ RPCSEC_MANS		= rpcsec_gss.3t rpc_gss_get_error.3t \
 dist_man5_MANS		= netconfig.5
 dist_man3_MANS		= $(LOOKUP_MANS) $(NETCONFIG_MANS) \
 			  $(BIND_MANS) $(GENERIC_MANS) $(COMPAT_MANS) \
-			  $(CLIENT_MANS) $(SERVER_MANS) $(RPCSEC_MANS)
+			  $(CLIENT_MANS) $(SERVER_MANS)
+if GSS
+dist_man3_MANS		+= $(RPCSEC_MANS)
+endif
 
 EXTRA_DIST		= publickey.3t publickey.5 rpc.5
 
