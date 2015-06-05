@@ -48,7 +48,13 @@
 #include <rpc/svc_auth_gss.h>
 #include <rpc/rpcsec_gss.h>
 
+#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
+/* MIT Kerberos */
 #include <gssapi/gssapi_ext.h>
+#else
+/* Heimdal Kerberos */
+#include <gssapi/gssapi.h>
+#endif
 
 #include <reentrant.h>
 
