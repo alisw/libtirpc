@@ -50,7 +50,9 @@
 #include "debug.h"
 
 static char    *OPSYS = "unix";
+#ifdef YP
 static char    *NETID = "netid.byname";
+#endif
 static char    *NETIDFILE = "/etc/netid";
 
 static int getnetid( char *, char * );
@@ -233,7 +235,7 @@ netname2host(netname, hostname, hostlen)
  * reads the file /etc/netid looking for a + to optionally go to the
  * network information service.
  */
-int
+static int
 getnetid(key, ret)
 	char           *key, *ret;
 {
