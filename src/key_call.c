@@ -58,7 +58,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-#include "dump.h"
+#include "debug.h"
 
 #define	KEY_TIMEOUT	5	/* per-try timeout in seconds */
 #define	KEY_NRETRY	12	/* number of retries */

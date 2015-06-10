@@ -27,6 +27,7 @@ nobase_include_HEADERS = tirpc/netconfig.h \
 			 tirpc/rpc/pmap_prot.h \
 			 tirpc/rpc/pmap_clnt.h \
 			 tirpc/rpc/nettype.h \
+			 tirpc/rpc/key_prot.h \
 			 tirpc/rpc/des.h \
 			 tirpc/rpc/des_crypt.h \
 			 tirpc/rpc/clnt_stat.h \
