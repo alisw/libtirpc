@@ -285,6 +285,37 @@ TIRPC_0.3.1 {
     svcauth_gss_set_svc_name;
 } TIRPC_0.3.0;
 
+TIRPC_0.3.2 {
+    getnetname;
+    getpublicandprivatekey;
+    getpublickey;
+    host2netname;
+    key_call_destroy;
+    key_decryptsession;
+    key_decryptsession_pk;
+    key_encryptsession;
+    key_encryptsession_pk;
+    key_gendes;
+    key_get_conv;
+    key_setsecret;
+    key_secret_is_set;
+    key_setnet;
+    netname2host;
+    netname2user;
+    rtime;
+    user2netname;
+    xdr_cryptkeyarg;
+    xdr_cryptkeyarg2;
+    xdr_cryptkeyres;
+    xdr_getcredres;
+    xdr_key_netstarg;
+    xdr_key_netstres;
+    xdr_keybuf;
+    xdr_keystatus;
+    xdr_netnamestr;
+    xdr_unixcred;
+} TIRPC_0.3.1;
+
 TIRPC_PRIVATE {
   global:
     __libc_clntudp_bufcreate;
