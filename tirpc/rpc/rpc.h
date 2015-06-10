@@ -52,13 +52,11 @@
 #include <rpc/rpc_msg.h>	/* protocol for rpc messages */
 #include <rpc/auth_unix.h>	/* protocol for unix style cred */
 
-#ifdef HAVE_AUTHDES
 /*
  *  Uncomment-out the next line if you are building the rpc library with
  *  DES Authentication (see the README file in the secure_rpc/ directory).
  */
 #include <rpc/auth_des.h>	/* protocol for des style cred */
-#endif /* HAVE_AUTHDES */
 
 /* Server side only remote procedure callee */
 #include <rpc/svc_auth.h>	/* service side authenticator */

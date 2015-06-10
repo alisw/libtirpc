@@ -30,12 +30,6 @@ AC_ARG_ENABLE(authdes,
 	[AC_HELP_STRING([--disable-authdes], [Disable DES authentication @<:@default=no@:>@])],
       [],[enable_authdes=yes])
 AM_CONDITIONAL(AUTHDES, test "x$enable_authdes" = xyes)
-if test "x$enable_authdes" = xyes; then
-	AC_DEFINE([HAVE_AUTHDES], [1],
-		  [Define to 1 if DES authentication is enabled])
-	CFLAG_AUTHDES="-DHAVE_AUTHDES=1"
-	AC_SUBST([CFLAG_AUTHDES])
-fi
 
 AC_ARG_ENABLE(ipv6,
 	[AC_HELP_STRING([--disable-ipv6], [Disable IPv6 support @<:@default=no@:>@])],
@@ -60,4 +54,5 @@ AC_CHECK_FUNCS([getrpcbyname getrpcbynumber setrpcent endrpcent getrpcent])
 
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile doc/Makefile])
 AC_OUTPUT(libtirpc.pc)
+
 

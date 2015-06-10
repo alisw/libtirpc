@@ -73,6 +73,7 @@ endif
 if AUTHDES
     libtirpc_la_SOURCES += auth_des.c authdes_prot.c des_crypt.c \
 			  des_impl.c
+    libtirpc_la_CFLAGS += -DHAVE_AUTHDES
 endif
 
 
