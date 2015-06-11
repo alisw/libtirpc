@@ -35,7 +35,6 @@ nobase_include_HEADERS = tirpc/netconfig.h \
 			 tirpc/rpc/clnt.h \
 			 tirpc/rpc/auth_unix.h \
 			 tirpc/rpc/auth_des.h \
-			 tirpc/rpc/auth_kerb.h \
 			 tirpc/rpc/auth.h
 
 if GSS

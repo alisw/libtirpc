@@ -24,13 +24,6 @@ pthread_mutex_t authdes_ops_lock = PTHREAD_MUTEX_INITIALIZER;
 /* protects des stats list */
 pthread_mutex_t svcauthdesstats_lock = PTHREAD_MUTEX_INITIALIZER;
 
-#ifdef KERBEROS
-/* auth_kerb.c serialization */
-pthread_mutex_t authkerb_lock = PTHREAD_MUTEX_INITIALIZER;
-/* protects kerb stats list */
-pthread_mutex_t svcauthkerbstats_lock = PTHREAD_MUTEX_INITIALIZER;
-#endif /* KERBEROS */
-
 /* auth_none.c serialization */
 pthread_mutex_t	authnone_lock = PTHREAD_MUTEX_INITIALIZER;
 
