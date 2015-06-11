@@ -339,26 +339,6 @@ svcauth_gss_accept_sec_context(struct svc_req *rqst,
 		if (!_rpc_gss_fill_in_creds(gd, gc))
 			return (FALSE);
 
-#ifdef HAVE_KRB5
-		{
-			gss_buffer_desc mechname;
-
-			gss_oid_to_str(&min_stat, mech, &mechname);
-
-			gss_log_debug("accepted context for %.*s with "
-				      "<mech %.*s, qop %d, svc %d>",
-				      gd->cname.length, (char *)gd->cname.value,
-				      mechname.length, (char *)mechname.value,
-				      gd->sec.qop, gd->sec.svc);
-
-			gss_release_buffer(&min_stat, &mechname);
-		}
-#elif HAVE_HEIMDAL
-		gss_log_debug("accepted context for %.*s with "
-			      "<mech {}, qop %d, svc %d>",
-			      gd->cname.length, (char *)gd->cname.value,
-			      gd->sec.qop, gd->sec.svc);
-#endif
 		seq = htonl(gr->gr_win);
 		seqbuf.value = &seq;
 		seqbuf.length = sizeof(seq);
