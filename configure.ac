@@ -1,4 +1,4 @@
-AC_INIT(libtirpc, 0.3.1)
+AC_INIT(libtirpc, 0.3.2)
 AM_INIT_AUTOMAKE([silent-rules])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/auth_des.c])
