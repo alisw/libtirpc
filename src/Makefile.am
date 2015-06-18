@@ -69,7 +69,7 @@ if GSS
 endif
 
 libtirpc_la_SOURCES += key_call.c key_prot_xdr.c getpublickey.c
-libtirpc_la_SOURCES += netname.c netnamer.c rtime.c
+libtirpc_la_SOURCES += netname.c netnamer.c rpcdname.c rtime.c
 
 CLEANFILES	       = cscope.* *~
 DISTCLEANFILES	       = Makefile.in
