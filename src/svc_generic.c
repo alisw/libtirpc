@@ -283,6 +283,8 @@ svc_tli_create(fd, nconf, bindaddr, sendsz, recvsz)
 	xprt->xp_type = __rpc_socktype2seman(si.si_socktype);
 
 	if (nconf) {
+		if (xprt->xp_netid != NULL)
+			free(xprt->xp_netid);
 		xprt->xp_netid = strdup(nconf->nc_netid);
 		xprt->xp_tp = strdup(nconf->nc_device);
 	}
