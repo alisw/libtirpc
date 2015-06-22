@@ -392,6 +392,12 @@ svc_vc_destroy(xprt)
 	__svc_vc_dodestroy(xprt);
 }
 
+static bool_t
+__svc_rendezvous_socket(xprt)
+	SVCXPRT *xprt;
+{
+	return (xprt->xp_ops->xp_recv == rendezvous_request);
+}
 static void
 __svc_vc_dodestroy(xprt)
 	SVCXPRT *xprt;
@@ -403,7 +409,7 @@ __svc_vc_dodestroy(xprt)
 
 	if (xprt->xp_fd != RPC_ANYFD)
 		(void)close(xprt->xp_fd);
-	if (xprt->xp_port != 0) {
+	if (__svc_rendezvous_socket(xprt)) {
 		/* a rendezvouser socket */
 		r = (struct cf_rendezvous *)xprt->xp_p1;
 		mem_free(r, sizeof (struct cf_rendezvous));
