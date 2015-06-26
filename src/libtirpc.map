@@ -316,6 +316,13 @@ TIRPC_0.3.2 {
     xdr_unixcred;
 } TIRPC_0.3.1;
 
+TIRPC_0.3.3 {
+    __getpublickey_LOCAL;
+    __key_decryptsession_pk_LOCAL;
+    __key_encryptsession_pk_LOCAL;
+    __key_gendes_LOCAL;
+} TIRPC_0.3.2;
+
 TIRPC_PRIVATE {
   global:
     __libc_clntudp_bufcreate;
