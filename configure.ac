@@ -5,6 +5,33 @@ AC_CONFIG_SRCDIR([src/auth_des.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
 
+# LT_VERSION_INFO="current:revision:age"
+#
+# From the libtool manual:
+#
+# 1.  Start with version information of 0:0:0 for each libtool library.
+# 2.  Update the version information only immediately before a public
+#     release of your software. More frequent updates are unnecessary,
+#     and only guarantee that the current interface number gets larger faster.
+# 3.  If the library source code has changed at all since the last update,
+#     then increment revision (c:r:a becomes c:r+1:a).
+# 4.  If any interfaces have been added, removed, or changed since the last
+#     update, increment current, and set revision to 0.
+# 5.  If any interfaces have been added since the last public release,
+#     then increment age.
+# 6.  If any interfaces have been removed since the last public release,
+#     then set age to 0.
+#
+# _Never_ try to set the interface numbers so that they correspond to the
+# release number of your package. This is an abuse that only fosters
+# misunderstanding of the purpose of library versions.
+#
+# In addition to these rules, symbol versioning is now in effect. soname
+# changes should be avoided.
+#
+LT_VERSION_INFO="2:0:1"
+AC_SUBST([LT_VERSION_INFO])
+
 AC_CHECK_HEADER([gssapi/gssapi.h], [HAVE_GSSAPI_H=yes], [HAVE_GSSAPI_H=no])
 
 AC_ARG_ENABLE(gssapi,
