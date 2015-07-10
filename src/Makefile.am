@@ -54,7 +54,7 @@ libtirpc_la_SOURCES = auth_none.c auth_unix.c authunix_prot.c bindresvport.c cln
         auth_time.c auth_des.c authdes_prot.c debug.c
 
 ## XDR
-libtirpc_la_SOURCES += xdr.c xdr_rec.c xdr_array.c xdr_float.c xdr_mem.c xdr_reference.c xdr_stdio.c
+libtirpc_la_SOURCES += xdr.c xdr_rec.c xdr_array.c xdr_float.c xdr_mem.c xdr_reference.c xdr_stdio.c xdr_sizeof.c
 
 if SYMVERS
     libtirpc_la_LDFLAGS += -Wl,--version-script=$(srcdir)/libtirpc.map
