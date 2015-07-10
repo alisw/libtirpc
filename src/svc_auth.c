@@ -38,6 +38,7 @@
 #include <reentrant.h>
 #include <sys/types.h>
 #include <rpc/rpc.h>
+#include <rpc/auth_des.h>
 #include <stdlib.h>
 
 /*
@@ -109,11 +110,9 @@ _gss_authenticate(rqst, msg, no_dispatch)
 	case AUTH_SHORT:
 		dummy = _svcauth_short(rqst, msg);
 		return (dummy);
-#ifdef DES_BUILTIN
 	case AUTH_DES:
 		dummy = _svcauth_des(rqst, msg);
 		return (dummy);
-#endif
 #ifdef HAVE_RPCSEC_GSS
 	case RPCSEC_GSS:
 		dummy = _svcauth_gss(rqst, msg, no_dispatch);
@@ -172,9 +171,7 @@ svc_auth_reg(cred_flavor, handler)
 	    case AUTH_NULL:
 	    case AUTH_SYS:
 	    case AUTH_SHORT:
-#ifdef DES_BUILTIN
 	    case AUTH_DES:
-#endif
 #ifdef HAVE_RPCSEC_GSS
 	    case RPCSEC_GSS:
 #endif

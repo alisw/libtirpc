@@ -433,7 +433,6 @@ cache_spot(key, name, timestamp)
 }
 
 
-#if (defined(sun) || defined(vax) || defined(__FreeBSD__))
 /*
  * Local credential handling stuff.
  * NOTE: bsd unix dependent.
@@ -528,5 +527,3 @@ invalidate(cred)
 	}
 	((struct bsdcred *)cred)->grouplen = INVALID;
 }
-#endif
-
