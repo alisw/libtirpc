@@ -159,6 +159,7 @@ static char *_rpc_gss_krb5_qop_names[] = {
 	NULL,
 };
 
+/* GSS_MECH_KRB5_OID: Defined by RFC 1964 */
 static struct _rpc_gss_mechanism _rpc_gss_mech_kerberos_v5 = {
 	.mi_name		= "kerberos_v5",
 	.mi_oid			= { 9, "\052\206\110\206\367\022\001\002\002" },
@@ -166,8 +167,17 @@ static struct _rpc_gss_mechanism _rpc_gss_mech_kerberos_v5 = {
 	.mi_qops		= _rpc_gss_krb5_qops,
 };
 
+/* GSS_KRB5_NT_PRINCIPAL_NAME: Defined by RFC 1964 */
+static struct _rpc_gss_mechanism _rpc_gss_mech_kerberos_v5_princname = {
+	.mi_name		= "kerberos_v5",
+	.mi_oid			= { 10, "\052\206\110\206\367\022\001\002\002\001" },
+	.mi_qop_names		= _rpc_gss_krb5_qop_names,
+	.mi_qops		= _rpc_gss_krb5_qops,
+};
+
 static struct _rpc_gss_mechanism *_rpc_gss_mechanisms[] = {
 	&_rpc_gss_mech_kerberos_v5,
+	&_rpc_gss_mech_kerberos_v5_princname,
 	NULL,
 };
 
