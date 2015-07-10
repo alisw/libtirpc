@@ -197,13 +197,20 @@ _rpc_gss_find_mechanism(char *mechanism)
 	return NULL;
 }
 
+static bool_t
+_rpc_gss_OID_equal(rpc_gss_OID o1, rpc_gss_OID o2)
+{
+	return (o1->length == o2->length) &&
+		(memcmp(o1->elements, o2->elements, o1->length) == 0);
+}
+
 static struct _rpc_gss_mechanism *
 _rpc_gss_find_oid(rpc_gss_OID oid)
 {
 	unsigned int i;
 
 	for (i = 0; _rpc_gss_mechanisms[i] != NULL; i++)
-		if (g_OID_equal(oid, &_rpc_gss_mechanisms[i]->mi_oid))
+		if (_rpc_gss_OID_equal(oid, &_rpc_gss_mechanisms[i]->mi_oid))
 			return _rpc_gss_mechanisms[i];
 	return NULL;
 }
