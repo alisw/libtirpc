@@ -51,7 +51,6 @@ If non-null,
 .Fa *rcred
 is set to point at the raw credentials for this request
 .It ucred
-.It rcred
 If non-null,
 .Fa *ucred
 is set to point at the corresponding unix credentials
