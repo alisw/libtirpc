@@ -29,30 +29,37 @@
 .Os
 .Sh NAME
 .Nm rpc_gss_qop_to_num
-.Nd "Convert a quality of protection name to number"
+.Nd "Convert a Quality of Protection name to number"
 .Sh SYNOPSIS
 .In rpc/rpcsec_gss.h
 .Ft bool_t
 .Fn rpc_gss_qop_to_num "const char *qop" "const char *mech" "u_int *num_ret"
 .Sh DESCRIPTION
-This function looks up a quality of protection by name by reading the file
-/etc/gss/qop.
+This function returns the numeric QOP value associated with the
+GSS_API QOP "qop" and mechanism "mech."
 .Sh PARAMETERS
 .Bl -tag -width ".It number_ret"
 .It qop
-The quality of protection to search for
+The name of Quality of Protection associated with the
+GSS_API mechanism "mech".
+"GSS_C_QOP_DEFAULT" is currently the only supported QOP.
 .It mech
-The mechanism name to search for
+The name of a GSS_API mechanism.
+"kerberos_v5" is currently the only supported mechanism.
 .It number_ret
-If the quality of protection is found, the corresponding number is
-returned in
-.Fa *num_ret
+Buffer in which to place the returned QOP number
 .El
 .Sh RETURN VALUES
-If the value is found,
+If the QOP and mechanism names are recognized,
 .Dv TRUE
-is returned, otherwise
-.Dv FALSE .
+is returned.
+The corresponding QOP number is returned in
+.Fa *num_ret .
+Otherwise
+.Dv FALSE
+is returned and
+.It number_ret
+is left untouched.
 .Sh AVAILABILITY
 The
 .Fn rpc_gss_qop_to_num

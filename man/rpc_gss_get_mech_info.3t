@@ -29,28 +29,33 @@
 .Os
 .Sh NAME
 .Nm rpc_gss_get_mech_info
-.Nd "Get extra information about a security mechanism"
+.Nd "Get Quality of Protection information for a security mechanism"
 .Sh SYNOPSIS
 .In rpc/rpcsec_gss.h
 .Ft const char **
 .Fn rpc_gss_get_mech_info "const char *mech" "rpc_gss_service_t *service"
 .Sh DESCRIPTION
-This function looks up a mechanism by name by reading the file
-/etc/gss/mech and queries it for its capabilities.
+This function returns the list of QOP names supported by the
+GSS_API mechanism named "mech".
 .Sh PARAMETERS
 .Bl -tag -width ".It service"
 .It mech
-The mechanism to search for
+The name of a GSS_API mechanism.
+"kerberos_v5" is currently the only supported mechanism.
 .It service
-If the mechanism is found, the maximum supported service type is
-returned in
-.Fa *service
+Buffer in which maximum service type is planted
 .El
 .Sh RETURN VALUES
-If the mechanism is found,
-a list of the supported qualities of protection is returned,
-otherwise
-.Dv NULL .
+If the named GSS_API mechanism is recognized,
+a list of the supported Qualities of Protection is returned.
+The maximum supported service type for the mechanism is returned in
+.Fa *service .
+Otherwise
+.Dv NULL
+is returned.
+.Pp
+Note: The returned QOP list is statically allocated memory.
+The caller must not free this array.
 .Sh AVAILABILITY
 The
 .Fn rpc_gss_get_mech_info

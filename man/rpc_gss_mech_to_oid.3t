@@ -35,22 +35,27 @@
 .Ft bool_t
 .Fn rpc_gss_mech_to_oid "const char *mech" "gss_OID *oid_ret"
 .Sh DESCRIPTION
-This function looks up a mechanism by name by reading the file
-/etc/gss/mech.
+This function returns the GSS OID associated with the GSS_API
+mechanism "mech".
 .Sh PARAMETERS
 .Bl -tag -width ".It oid_ret"
 .It mech
-The mechanism name to search for
+The name of a GSS_API mechanism.
+"kerberos_v5" is currently the only supported mechanism.
 .It oid_ret
-If the mechanism is found, the corresponding GSS-API oid is returned
-in
-.Fa *oid_ret
+Buffer in which to place the returned OID
 .El
 .Sh RETURN VALUES
-If the mechanism is found,
+If the GSS_API mechanism name is recognized,
 .Dv TRUE
-is returned, otherwise
-.Dv FALSE .
+is returned.
+The corresponding GSS-API oid is returned in
+.Fa *oid_ret .
+Otherwise
+.Dv FALSE
+is returned and
+.Fa *oid_ret
+is left untouched.
 .Sh AVAILABILITY
 The
 .Fn rpc_gss_mech_to_oid

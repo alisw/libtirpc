@@ -55,9 +55,8 @@ For instance, a principal such as
 .Qq nfs@server.example.com
 might be used by an application which needs to contact an NFS server
 .It mechanism
-The desired mechanism for this security context.
-The value of mechanism should be the name of one of the security
-mechanisms listed in /etc/gss/mech.
+The name of the GSS_API mechanism to use for the new security context.
+"kerberos_v5" is currently the only supported mechanism.
 .It service
 Type of service requested.
 .Bl -tag -width "rpc_gss_svc_integrity"
@@ -72,8 +71,9 @@ RPC headers and data are integrity protected by a checksum.
 RPC headers are integrity protected by a checksum and data is encrypted.
 .El
 .It qop
-Desired quality of protection or NULL for the default.
-Available values are listed in /etc/gss/qop
+The name of the Quality of Protection to use for the new security context,
+or NULL to use the default QOP.
+"GSS_C_QOP_DEFAULT" is currently the only supported QOP.
 .It options_req
 Extra security context options to be passed to the underlying GSS-API
 mechanism.

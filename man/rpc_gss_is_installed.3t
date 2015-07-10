@@ -29,23 +29,24 @@
 .Os
 .Sh NAME
 .Nm rpc_gss_is_installed
-.Nd "Query for the presence os a security mechanism"
+.Nd "Query for the presence of a security mechanism"
 .Sh SYNOPSIS
 .In rpc/rpcsec_gss.h
 .Ft bool_t
 .Fn rpc_gss_is_installed "const char *mech"
 .Sh DESCRIPTION
-This function looks up a mechanism by name by reading the file
-/etc/gss/mech.
+This function indicates whether the GSS_API mechanism named "mech"
+is installed and enabled.
 .Sh PARAMETERS
 .Bl -tag -width ".It mech"
 .It mech
-The mechanism to search for
+The name of a GSS_API mechanism.
+"kerberos_v5" is currently the only supported mechanism.
 .El
 .Sh RETURN VALUES
 Returns
 .Dv TRUE
-if the mechanism is installed,
+if the named GSS_API mechanism is installed and enabled,
 .Dv FALSE
 otherwise.
 .Sh AVAILABILITY
