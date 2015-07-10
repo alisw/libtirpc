@@ -235,28 +235,20 @@ static bool_t
 _rpc_gss_fill_in_creds(struct svc_rpc_gss_data *gd, struct rpc_gss_cred *gc)
 {
 	rpc_gss_rawcred_t *rcred = &gd->rcred;
-	OM_uint32 maj_stat, min_stat;
-	gss_buffer_desc buf;
 
 	rcred->version = gc->gc_v;
 	if (!rpc_gss_oid_to_mech(gd->sec.mech, &rcred->mechanism))
 		return FALSE;
 	rcred->service = _rpc_gss_svc_to_service(gd->sec.svc);
-	maj_stat = gss_export_name(&min_stat, gd->client_name, &buf);
-	if (maj_stat != GSS_S_COMPLETE) {
-		gss_log_status("gss_export_name", maj_stat, min_stat);
-		return FALSE;
-	}
 
 	rcred->client_principal = calloc(1, sizeof(rpc_gss_principal_t) +
-								buf.length);
-	if (rcred->client_principal == NULL) {
-		(void)gss_release_buffer(&min_stat, &buf);
+						gd->cname.length);
+	if (rcred->client_principal == NULL)
 		return FALSE;
-	}
-	rcred->client_principal->len = buf.length;
-	(void)memcpy(rcred->client_principal->name, buf.value, buf.length);
-	(void)gss_release_buffer(&min_stat, &buf);
+
+	rcred->client_principal->len = gd->cname.length;
+	(void)memcpy(rcred->client_principal->name,
+			gd->cname.value, gd->cname.length);
 
 	rcred->svc_principal = _svcauth_svc_name;
 
