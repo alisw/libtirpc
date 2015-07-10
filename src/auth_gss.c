@@ -821,7 +821,6 @@ rpc_gss_seccreate(CLIENT *clnt, char *principal, char *mechanism,
 	clnt->cl_auth = auth;
 
 	if (_rpc_gss_refresh(auth, ret) == FALSE) {
-		authgss_destroy(auth);
 		auth = NULL;
 	} else {
 		rpc_gss_clear_error();
