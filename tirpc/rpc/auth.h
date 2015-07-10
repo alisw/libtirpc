@@ -313,6 +313,8 @@ extern AUTH *authnone_create(void);		/* takes no parameters */
 extern "C" {
 #endif
 extern AUTH *authdes_create (char *, u_int, struct sockaddr *, des_block *);
+extern AUTH *authdes_pk_create (char *, netobj *, u_int,
+				struct sockaddr *, des_block *);
 extern AUTH *authdes_seccreate (const char *, const u_int, const  char *,
     const  des_block *);
 #ifdef __cplusplus

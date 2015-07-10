@@ -61,6 +61,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <rpcsvc/nis.h>
 
 #include "rpc_com.h"
 
@@ -551,6 +552,46 @@ fallback:
 	dummy = authdes_seccreate(servername, window, NULL, ckey);
 	return (dummy);
 }
+
+/*
+ * Create the client des authentication object. Obsoleted by
+ * authdes_pk_seccreate().
+ */
+extern AUTH *authdes_pk_seccreate(const char *, netobj *, u_int, const char *,
+        const des_block *, nis_server *);
+
+AUTH *
+authdes_pk_create(servername, pkey, window, syncaddr, ckey)
+	char *servername;		/* network name of server */
+	netobj *pkey;			/* public key */
+	u_int window;			/* time to live */
+	struct sockaddr *syncaddr;	/* optional hostaddr to sync with */
+	des_block *ckey;		/* optional conversation key to use */
+{
+	AUTH *nauth;
+	char hostname[NI_MAXHOST];
+
+	if (syncaddr) {
+		/*
+		 * Change addr to hostname, because that is the way
+		 * new interface takes it.
+		 */
+	        switch (syncaddr->sa_family) {
+		case AF_INET:
+		  if (getnameinfo(syncaddr, sizeof(struct sockaddr_in), hostname,
+				  sizeof hostname, NULL, 0, 0) != 0)
+		    goto fallback;
+		  break;
+		default:
+		  goto fallback;
+		}
+		nauth = authdes_pk_seccreate(servername, pkey, window, hostname, ckey, NULL);
+		return (nauth);
+	}
+fallback:
+	return authdes_pk_seccreate(servername, pkey, window, NULL, ckey, NULL);
+}
+
 
 /*
  * Create a client handle for a unix connection. Obsoleted by clnt_vc_create()
