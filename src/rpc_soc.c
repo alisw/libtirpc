@@ -532,7 +532,6 @@ authdes_create(servername, window, syncaddr, ckey)
 	struct sockaddr *syncaddr;	/* optional hostaddr to sync with */
 	des_block *ckey;		/* optional conversation key to use */
 {
-	AUTH *dummy;
 	AUTH *nauth;
 	char hostname[NI_MAXHOST];
 
@@ -541,16 +540,25 @@ authdes_create(servername, window, syncaddr, ckey)
 		 * Change addr to hostname, because that is the way
 		 * new interface takes it.
 		 */
-		if (getnameinfo(syncaddr, sizeof(syncaddr), hostname,
-		    sizeof hostname, NULL, 0, 0) != 0)
-			goto fallback;
-
+	        switch (syncaddr->sa_family) {
+		case AF_INET:
+		  if (getnameinfo(syncaddr, sizeof(struct sockaddr_in), hostname,
+				  sizeof hostname, NULL, 0, 0) != 0)
+		    goto fallback;
+		  break;
+		case AF_INET6:
+		  if (getnameinfo(syncaddr, sizeof(struct sockaddr_in6), hostname,
+				  sizeof hostname, NULL, 0, 0) != 0)
+		    goto fallback;
+		  break;
+		default:
+		  goto fallback;
+		}
 		nauth = authdes_seccreate(servername, window, hostname, ckey);
 		return (nauth);
 	}
 fallback:
-	dummy = authdes_seccreate(servername, window, NULL, ckey);
-	return (dummy);
+	return authdes_seccreate(servername, window, NULL, ckey);
 }
 
 /*
