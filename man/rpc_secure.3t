@@ -16,6 +16,14 @@
 .Fa "struct sockaddr *addr"
 .Fa "des_block *ckey"
 .Fc
+.Ft AUTH *
+.Fo authdes_pk_create
+.Fa "char *name"
+.FA "netobj *publickey"
+.Fa "unsigned window"
+.Fa "struct sockaddr *addr"
+.Fa "des_block *ckey"
+.Fc
 .Ft int
 .Fn authdes_getucred "struct authdes_cred *adc" "uid_t *uid" "gid_t *gid" "int *grouplen" "gid_t *groups"
 .Ft int
@@ -111,6 +119,13 @@ generate a random
 .Tn DES
 key to be used for the encryption of credentials.
 If it is supplied, however, then it will be used instead.
+.Pp
+The
+.Fn authdes_pk_create
+function is identical to
+.Fn authdes_create ,
+except that the public key needs to be provided at calling time and
+will not looked up by this function itself.
 .Pp
 The
 .Fn authdes_getucred
