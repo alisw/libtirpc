@@ -337,6 +337,8 @@ again:
 	 */
 
 	newxprt = makefd_xprt(sock, r->sendsize, r->recvsize);
+	if (!newxprt)
+		return (FALSE);
 
 	if (!__rpc_set_netbuf(&newxprt->xp_rtaddr, &addr, len))
 		return (FALSE);
