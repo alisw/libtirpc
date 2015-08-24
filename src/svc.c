@@ -100,16 +100,43 @@ xprt_register (xprt)
   rwlock_wrlock (&svc_fd_lock);
   if (__svc_xports == NULL)
     {
-      __svc_xports = (SVCXPRT **) mem_alloc (FD_SETSIZE * sizeof (SVCXPRT *));
+      __svc_xports = (SVCXPRT **) calloc (_rpc_dtablesize(), sizeof (SVCXPRT *));
       if (__svc_xports == NULL)
 	return;
-      memset (__svc_xports, '\0', FD_SETSIZE * sizeof (SVCXPRT *));
     }
-  if (sock < FD_SETSIZE)
+  if (sock < _rpc_dtablesize())
     {
+      int i;
+      struct pollfd *new_svc_pollfd;
+
       __svc_xports[sock] = xprt;
-      FD_SET (sock, &svc_fdset);
-      svc_maxfd = max (svc_maxfd, sock);
+      if (sock < FD_SETSIZE)
+	{
+          FD_SET (sock, &svc_fdset);
+	  svc_maxfd = max (svc_maxfd, sock);
+	}
+
+      /* Check if we have an empty slot */
+      for (i = 0; i < svc_max_pollfd; ++i)
+        if (svc_pollfd[i].fd == -1)
+          {
+            svc_pollfd[i].fd = sock;
+            svc_pollfd[i].events = (POLLIN | POLLPRI |
+                                    POLLRDNORM | POLLRDBAND);
+            return;
+          }
+
+      new_svc_pollfd = (struct pollfd *) realloc (svc_pollfd,
+                                                  sizeof (struct pollfd)
+                                                  * (svc_max_pollfd + 1));
+      if (new_svc_pollfd == NULL) /* Out of memory */
+        return;
+      svc_pollfd = new_svc_pollfd;
+      ++svc_max_pollfd;
+
+      svc_pollfd[svc_max_pollfd - 1].fd = sock;
+      svc_pollfd[svc_max_pollfd - 1].events = (POLLIN | POLLPRI |
+                                               POLLRDNORM | POLLRDBAND);
     }
   rwlock_unlock (&svc_fd_lock);
 }
@@ -142,16 +169,25 @@ __xprt_do_unregister (xprt, dolock)
 
   if (dolock)
     rwlock_wrlock (&svc_fd_lock);
-  if ((sock < FD_SETSIZE) && (__svc_xports[sock] == xprt))
+  if ((sock < _rpc_dtablesize() ) && (__svc_xports[sock] == xprt))
     {
+      int i;
+
       __svc_xports[sock] = NULL;
-      FD_CLR (sock, &svc_fdset);
-      if (sock >= svc_maxfd)
+      if (sock < FD_SETSIZE)
 	{
-	  for (svc_maxfd--; svc_maxfd >= 0; svc_maxfd--)
-	    if (__svc_xports[svc_maxfd])
-	      break;
+          FD_CLR (sock, &svc_fdset);
+	  if (sock >= svc_maxfd)
+       	    {
+              for (svc_maxfd--; svc_maxfd >= 0; svc_maxfd--)
+                if (__svc_xports[svc_maxfd])
+                  break;
+            }
 	}
+
+      for (i = 0; i < svc_max_pollfd; ++i)
+        if (svc_pollfd[i].fd == sock)
+          svc_pollfd[i].fd = -1;
     }
   if (dolock)
     rwlock_unlock (&svc_fd_lock);
@@ -606,11 +642,15 @@ svc_getreqset (readfds)
   int bit, fd;
   fd_mask mask, *maskp;
   int sock;
+  int setsize;
 
   assert (readfds != NULL);
 
+  setsize = _rpc_dtablesize ();
+  if (setsize > FD_SETSIZE)
+    setsize = FD_SETSIZE;
   maskp = readfds->fds_bits;
-  for (sock = 0; sock < FD_SETSIZE; sock += NFDBITS)
+  for (sock = 0; sock < setsize; sock += NFDBITS)
     {
       for (mask = *maskp++; (bit = ffsl(mask)) != 0; mask ^= (1L << (bit - 1)))
 	{
@@ -733,36 +773,22 @@ svc_getreq_poll (pfdp, pollretval)
      struct pollfd *pfdp;
      int pollretval;
 {
-  int i;
-  int fds_found;
+  int fds_found, i;
 
-  for (i = fds_found = 0; fds_found < pollretval; i++)
+  for (i = fds_found = 0; i < svc_max_pollfd; ++i)
     {
       struct pollfd *p = &pfdp[i];
 
-      if (p->revents)
+      if (p->fd != -1 && p->revents)
 	{
-	  /* fd has input waiting */
-	  fds_found++;
-	  /*
-	   *      We assume that this function is only called
-	   *      via someone _select()ing from svc_fdset or
-	   *      _poll()ing from svc_pollset[].  Thus it's safe
-	   *      to handle the POLLNVAL event by simply turning
-	   *      the corresponding bit off in svc_fdset.  The
-	   *      svc_pollset[] array is derived from svc_fdset
-	   *      and so will also be updated eventually.
-	   *
-	   *      XXX Should we do an xprt_unregister() instead?
-	   */
-	  if (p->revents & POLLNVAL)
-	    {
-	      rwlock_wrlock (&svc_fd_lock);
-	      FD_CLR (p->fd, &svc_fdset);
-	      rwlock_unlock (&svc_fd_lock);
-	    }
-	  else
-	    svc_getreq_common (p->fd);
+          /* fd has input waiting */
+          if (p->revents & POLLNVAL)
+	    xprt_unregister (__svc_xports[p->fd]);
+          else
+            svc_getreq_common (p->fd);
+
+          if (++fds_found >= pollretval)
+            break;
 	}
     }
 }

@@ -34,10 +34,11 @@
 #include <reentrant.h>
 #include <err.h>
 #include <errno.h>
-#include <rpc/rpc.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/poll.h>
+
 
 #include <rpc/rpc.h>
 #include "rpc_com.h"
@@ -46,33 +47,54 @@
 void
 svc_run()
 {
-	fd_set readfds, cleanfds;
-	struct timeval timeout;
-	extern rwlock_t svc_fd_lock;
+  int i;
+  struct pollfd *my_pollfd = NULL;
+  int last_max_pollfd = 0;
 
+  for (;;) {
+    int max_pollfd = svc_max_pollfd;
+    if (max_pollfd == 0 && svc_pollfd == NULL)
+        break;
 
-	for (;;) {
-		rwlock_rdlock(&svc_fd_lock);
-		readfds = svc_fdset;
-		cleanfds = svc_fdset;
-		rwlock_unlock(&svc_fd_lock);
-		timeout.tv_sec = 30;
-		timeout.tv_usec = 0;
-		switch (select(svc_maxfd+1, &readfds, NULL, NULL, &timeout)) {
-		case -1:
-			FD_ZERO(&readfds);
-			if (errno == EINTR) {
-				continue;
-			}
-			warn("svc_run: - select failed");
-			return;
-		case 0:
-			__svc_clean_idle(&cleanfds, 30, FALSE);
-			continue;
-		default:
-			svc_getreqset(&readfds);
-		}
-	}
+      if (last_max_pollfd != max_pollfd)
+        {
+          struct pollfd *new_pollfd
+            = realloc (my_pollfd, sizeof (struct pollfd) * max_pollfd);
+
+          if (new_pollfd == NULL)
+            {
+              warn ("svc_run: - out of memory");
+              break;
+            }
+
+          my_pollfd = new_pollfd;
+          last_max_pollfd = max_pollfd;
+        }
+
+      for (i = 0; i < max_pollfd; ++i)
+        {
+          my_pollfd[i].fd = svc_pollfd[i].fd;
+          my_pollfd[i].events = svc_pollfd[i].events;
+          my_pollfd[i].revents = 0;
+        }
+
+      switch (i = poll (my_pollfd, max_pollfd, -1))
+        {
+        case -1:
+          if (errno == EINTR)
+            continue;
+          warn ("svc_run: - poll failed");
+          break;
+        case 0:
+          continue;
+        default:
+          svc_getreq_poll (my_pollfd, i);
+          continue;
+        }
+      break;
+    }
+
+  free (my_pollfd);
 }
 
 /*
@@ -85,6 +107,8 @@ svc_exit()
 	extern rwlock_t svc_fd_lock;
 
 	rwlock_wrlock(&svc_fd_lock);
-	FD_ZERO(&svc_fdset);
+	free (svc_pollfd);
+	svc_pollfd = NULL;
+	svc_max_pollfd = 0;
 	rwlock_unlock(&svc_fd_lock);
 }

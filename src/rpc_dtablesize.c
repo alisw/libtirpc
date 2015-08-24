@@ -50,8 +50,6 @@ _rpc_dtablesize(void)
 
 	if (size == 0) {
 		size = getdtablesize();
-		if (size > FD_SETSIZE)
-			size = FD_SETSIZE;
 	}
 	return (size);
 }

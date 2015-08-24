@@ -315,12 +315,10 @@ extern int	rpc_reg(rpcprog_t, rpcvers_t, rpcproc_t,
  * dynamic; must be inspected before each call to select
  */
 extern int svc_maxfd;
-#ifdef FD_SETSIZE
 extern fd_set svc_fdset;
 #define svc_fds svc_fdset.fds_bits[0]	/* compatibility */
-#else
-extern int svc_fds;
-#endif /* def FD_SETSIZE */
+extern struct pollfd *svc_pollfd;
+extern int svc_max_pollfd;
 
 /*
  * a small program implemented by the svc_rpc implementation itself;

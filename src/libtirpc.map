@@ -322,7 +322,9 @@ TIRPC_0.3.3 {
     __key_encryptsession_pk_LOCAL;
     __key_gendes_LOCAL;
     xdr_sizeof;
-	authdes_pk_create;
+    authdes_pk_create;
+    svc_pollfd;
+    svc_max_pollfd;
 } TIRPC_0.3.2;
 
 TIRPC_PRIVATE {

@@ -36,3 +36,6 @@
 struct opaque_auth _null_auth;
 fd_set svc_fdset;
 int svc_maxfd = -1;
+struct pollfd *svc_pollfd;
+int svc_max_pollfd;
+
