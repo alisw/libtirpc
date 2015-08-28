@@ -66,6 +66,21 @@ AC_ARG_ENABLE(symvers,
       [],[enable_symvers=yes])
 AM_CONDITIONAL(SYMVERS, test "x$enable_symvers" = xyes)
 
+AC_CANONICAL_BUILD
+# Check for which host we are on and setup a few things
+# specifically based on the host
+case $build_os in
+     linux*)
+         # Do something specific for linux
+         LDFLAG_NOUNDEFINED="-Wl,--no-undefined"
+         AC_SUBST(LDFLAG_NOUNDEFINED)
+         ;;
+     *)
+         #Default Case
+         ;;
+esac
+
+
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_LIBTOOL
 AC_HEADER_DIRENT
