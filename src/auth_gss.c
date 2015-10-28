@@ -48,6 +48,7 @@
 #include <rpc/rpcsec_gss.h>
 #include <rpc/clnt.h>
 #include <netinet/in.h>
+#include <reentrant.h>
 
 #include "debug.h"
 
@@ -134,6 +135,8 @@ char *p;
 	fprintf(stderr, "     cred: %p\n", ptr->cred);
 }
 
+extern pthread_mutex_t		 auth_ref_lock;
+
 struct rpc_gss_data {
 	bool_t			 established;	/* context established */
 	gss_buffer_desc		 gc_wire_verf;	/* save GSS_S_COMPLETE NULL RPC verfier
@@ -146,11 +149,34 @@ struct rpc_gss_data {
 	u_int			 win;		/* sequence window */
 	int			 time_req;	/* init_sec_context time_req */
 	gss_channel_bindings_t	 icb;		/* input channel bindings */
+	int			 refcnt;	/* reference count gss AUTHs */
 };
 
 #define	AUTH_PRIVATE(auth)	((struct rpc_gss_data *)auth->ah_private)
 
 static struct timeval AUTH_TIMEOUT = { 25, 0 };
+
+static void
+authgss_auth_get(AUTH *auth)
+{
+	struct rpc_gss_data	*gd = AUTH_PRIVATE(auth);
+
+	mutex_lock(&auth_ref_lock);
+	++gd->refcnt;
+	mutex_unlock(&auth_ref_lock);
+}
+
+static int
+authgss_auth_put(AUTH *auth)
+{
+	int refcnt;
+	struct rpc_gss_data	*gd = AUTH_PRIVATE(auth);
+
+	mutex_lock(&auth_ref_lock);
+	refcnt = --gd->refcnt;
+	mutex_unlock(&auth_ref_lock);
+	return refcnt;
+}
 
 AUTH *
 authgss_create(CLIENT *clnt, gss_name_t name, struct rpc_gss_sec *sec)
@@ -205,7 +231,7 @@ authgss_create(CLIENT *clnt, gss_name_t name, struct rpc_gss_sec *sec)
 	if (!authgss_refresh(auth, NULL))
 		auth = NULL;
 	else
-		auth_get(auth); /* Reference for caller */
+		authgss_auth_get(auth); /* Reference for caller */
 
 	clnt->cl_auth = save_auth;
 
@@ -656,21 +682,24 @@ authgss_destroy_context(AUTH *auth)
 static void
 authgss_destroy(AUTH *auth)
 {
-	struct rpc_gss_data	*gd;
-	OM_uint32		 min_stat;
+	if(authgss_auth_put(auth) == 0)
+	{
+		struct rpc_gss_data	*gd;
+		OM_uint32		 min_stat;
 
-	gss_log_debug("in authgss_destroy()");
+		gss_log_debug("in authgss_destroy()");
 
-	gd = AUTH_PRIVATE(auth);
+		gd = AUTH_PRIVATE(auth);
 
-	authgss_destroy_context(auth);
+		authgss_destroy_context(auth);
 
-	LIBTIRPC_DEBUG(3, ("authgss_destroy: freeing name %p", gd->name));
-	if (gd->name != GSS_C_NO_NAME)
-		gss_release_name(&min_stat, &gd->name);
+		LIBTIRPC_DEBUG(3, ("authgss_destroy: freeing name %p", gd->name));
+		if (gd->name != GSS_C_NO_NAME)
+			gss_release_name(&min_stat, &gd->name);
 
-	free(gd);
-	free(auth);
+		free(gd);
+		free(auth);
+	}
 }
 
 static bool_t
@@ -824,7 +853,7 @@ rpc_gss_seccreate(CLIENT *clnt, char *principal, char *mechanism,
 		auth = NULL;
 	} else {
 		rpc_gss_clear_error();
-		auth_get(auth);
+		authgss_auth_get(auth);
 	}
 
 	clnt->cl_auth = save_auth;
