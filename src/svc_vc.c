@@ -157,8 +157,10 @@ svc_vc_create(fd, sendsize, recvsize)
 		warnx("svc_vc_create: out of memory");
 		goto cleanup_svc_vc_create;
 	}
-	if (!__rpc_fd2sockinfo(fd, &si))
-		return NULL;
+	if (!__rpc_fd2sockinfo(fd, &si)) {
+		warnx("svc_vc_create: __rpc_fd2sockinfo failed");
+		goto cleanup_svc_vc_create;
+	}
 	r->sendsize = __rpc_get_t_size(si.si_af, si.si_proto, (int)sendsize);
 	r->recvsize = __rpc_get_t_size(si.si_af, si.si_proto, (int)recvsize);
 	r->maxrec = __svc_maxrec;
