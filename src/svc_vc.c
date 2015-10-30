@@ -276,7 +276,7 @@ makefd_xprt(fd, sendsize, recvsize)
 	memset(xprt, 0, sizeof *xprt);
 	cd = mem_alloc(sizeof(struct cf_conn));
 	if (cd == NULL) {
-		warnx("svc_tcp: makefd_xprt: out of memory");
+		warnx("svc_vc: makefd_xprt: out of memory");
 		mem_free(xprt, sizeof(SVCXPRT));
 		xprt = NULL;
 		goto done;
