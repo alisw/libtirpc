@@ -55,9 +55,6 @@
 
 #define	RQCRED_SIZE	400	/* this size is excessive */
 
-#define SVC_VERSQUIET 0x0001	/* keep quiet about vers mismatch */
-#define version_keepquiet(xp) ((u_long)(xp)->xp_p3 & SVC_VERSQUIET)
-
 #define max(a, b) (a > b ? a : b)
 
 /*
@@ -503,20 +500,14 @@ void
 __svc_versquiet_on (xprt)
      SVCXPRT *xprt;
 {
-  u_long tmp;
-
-  tmp = ((u_long) xprt->xp_p3) | SVC_VERSQUIET;
-  xprt->xp_p3 = tmp;
+  svc_flags (xprt) |= SVC_VERSQUIET;
 }
 
 void
 __svc_versquiet_off (xprt)
      SVCXPRT *xprt;
 {
-  u_long tmp;
-
-  tmp = ((u_long) xprt->xp_p3) & ~SVC_VERSQUIET;
-  xprt->xp_p3 = tmp;
+  svc_flags (xprt) &= ~SVC_VERSQUIET;
 }
 
 void
@@ -530,7 +521,7 @@ int
 __svc_versquiet_get (xprt)
      SVCXPRT *xprt;
 {
-  return ((int) xprt->xp_p3) & SVC_VERSQUIET;
+  return version_keepquiet (xprt);
 }
 #endif
 

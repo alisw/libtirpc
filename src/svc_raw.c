@@ -75,6 +75,7 @@ SVCXPRT *
 svc_raw_create()
 {
 	struct svc_raw_private *srp;
+	SVCXPRT_EXT *ext = NULL;
 /* VARIABLES PROTECTED BY svcraw_lock: svc_raw_private, srp */
 
 	mutex_lock(&svcraw_lock);
@@ -85,6 +86,14 @@ svc_raw_create()
 			mutex_unlock(&svcraw_lock);
 			return (NULL);
 		}
+		ext = mem_alloc(sizeof (*ext));
+		if (ext == NULL) {
+			free(srp);
+			mutex_unlock(&svcraw_lock);
+			return (NULL);
+		}
+		memset(ext, 0, sizeof (*ext));
+		srp->server.xp_p3 = ext;
 		if (__rpc_rawcombuf == NULL)
 			__rpc_rawcombuf = calloc(UDPMSGSIZE, sizeof (char));
 		srp->raw_buf = __rpc_rawcombuf; /* Share it with the client */
@@ -92,7 +101,7 @@ svc_raw_create()
 	}
 	srp->server.xp_fd = FD_SETSIZE;
 	srp->server.xp_port = 0;
-	srp->server.xp_p3 = NULL;
+	svc_flags(&srp->server) = 0;
 	svc_raw_ops(&srp->server);
 	srp->server.xp_verf.oa_base = srp->verf_body;
 	xdrmem_create(&srp->xdr_stream, srp->raw_buf, UDPMSGSIZE, XDR_DECODE);

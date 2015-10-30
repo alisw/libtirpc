@@ -96,6 +96,7 @@ svc_dg_create(fd, sendsize, recvsize)
 	u_int recvsize;
 {
 	SVCXPRT *xprt;
+	SVCXPRT_EXT *ext = NULL;
 	struct svc_dg_data *su = NULL;
 	struct __rpc_sockinfo si;
 	struct sockaddr_storage ss;
@@ -120,6 +121,11 @@ svc_dg_create(fd, sendsize, recvsize)
 		goto freedata;
 	memset(xprt, 0, sizeof (SVCXPRT));
 
+	ext = mem_alloc(sizeof (*ext));
+	if (ext == NULL)
+		goto freedata;
+	memset(ext, 0, sizeof (*ext));
+
 	su = mem_alloc(sizeof (*su));
 	if (su == NULL)
 		goto freedata;
@@ -131,6 +137,7 @@ svc_dg_create(fd, sendsize, recvsize)
 	su->su_cache = NULL;
 	xprt->xp_fd = fd;
 	xprt->xp_p2 = su;
+	xprt->xp_p3 = ext;
 	xprt->xp_auth = NULL;
 	xprt->xp_verf.oa_base = su->su_verfbody;
 	svc_dg_ops(xprt);
@@ -151,6 +158,8 @@ freedata:
 	if (xprt) {
 		if (su)
 			(void) mem_free(su, sizeof (*su));
+		if (ext)
+			(void) mem_free(ext, sizeof (*ext));
 		(void) mem_free(xprt, sizeof (SVCXPRT));
 	}
 	return (NULL);
@@ -302,6 +311,7 @@ static void
 svc_dg_destroy(xprt)
 	SVCXPRT *xprt;
 {
+	SVCXPRT_EXT *ext = SVCEXT(xprt);
 	struct svc_dg_data *su = su_data(xprt);
 
 	xprt_unregister(xprt);
@@ -314,6 +324,7 @@ svc_dg_destroy(xprt)
 	XDR_DESTROY(&(su->su_xdrs));
 	(void) mem_free(rpc_buffer(xprt), su->su_iosz);
 	(void) mem_free(su, sizeof (*su));
+	(void) mem_free(ext, sizeof (*ext));
 	if (xprt->xp_rtaddr.buf)
 		(void) mem_free(xprt->xp_rtaddr.buf, xprt->xp_rtaddr.maxlen);
 	if (xprt->xp_ltaddr.buf)

@@ -146,7 +146,8 @@ svc_vc_create(fd, sendsize, recvsize)
 	u_int sendsize;
 	u_int recvsize;
 {
-	SVCXPRT *xprt;
+	SVCXPRT *xprt = NULL;
+	SVCXPRT_EXT *ext = NULL;
 	struct cf_rendezvous *r = NULL;
 	struct __rpc_sockinfo si;
 	struct sockaddr_storage sslocal;
@@ -169,10 +170,16 @@ svc_vc_create(fd, sendsize, recvsize)
 		warnx("svc_vc_create: out of memory");
 		goto cleanup_svc_vc_create;
 	}
+	ext = mem_alloc(sizeof (*ext));
+	if (ext == NULL) {
+		warnx("svc_vc_create: out of memory");
+		goto cleanup_svc_vc_create;
+	}
+	memset(ext, 0, sizeof (*ext));
 	xprt->xp_tp = NULL;
 	xprt->xp_p1 = r;
 	xprt->xp_p2 = NULL;
-	xprt->xp_p3 = NULL;
+	xprt->xp_p3 = ext;
 	xprt->xp_auth = NULL;
 	xprt->xp_verf = _null_auth;
 	svc_vc_rendezvous_ops(xprt);
@@ -194,6 +201,10 @@ svc_vc_create(fd, sendsize, recvsize)
 cleanup_svc_vc_create:
 	if (r != NULL)
 		mem_free(r, sizeof(*r));
+	if (xprt != NULL)
+		mem_free(xprt, sizeof(*xprt));
+	if (ext != NULL)
+		mem_free(ext, sizeof(*ext));
 	return (NULL);
 }
 
@@ -256,6 +267,7 @@ makefd_xprt(fd, sendsize, recvsize)
 	u_int recvsize;
 {
 	SVCXPRT *xprt;
+	SVCXPRT_EXT *ext;
 	struct cf_conn *cd;
 	const char *netid;
 	struct __rpc_sockinfo si;
@@ -274,9 +286,18 @@ makefd_xprt(fd, sendsize, recvsize)
 		goto done;
 	}
 	memset(xprt, 0, sizeof *xprt);
+	ext = mem_alloc(sizeof (*ext));
+	if (ext == NULL) {
+		warnx("svc_vc: makefd_xprt: out of memory");
+		mem_free(xprt, sizeof(SVCXPRT));
+		xprt = NULL;
+		goto done;
+	}
+	memset(ext, 0, sizeof (*ext));
 	cd = mem_alloc(sizeof(struct cf_conn));
 	if (cd == NULL) {
 		warnx("svc_vc: makefd_xprt: out of memory");
+		mem_free(ext, sizeof(*ext));
 		mem_free(xprt, sizeof(SVCXPRT));
 		xprt = NULL;
 		goto done;
@@ -285,6 +306,7 @@ makefd_xprt(fd, sendsize, recvsize)
 	xdrrec_create(&(cd->xdrs), sendsize, recvsize,
 	    xprt, read_vc, write_vc);
 	xprt->xp_p1 = cd;
+	xprt->xp_p3 = ext;
 	xprt->xp_auth = NULL;
 	xprt->xp_verf.oa_base = cd->verf_body;
 	svc_vc_ops(xprt);  /* truely deals with calls */
@@ -408,6 +430,7 @@ static void
 __svc_vc_dodestroy(xprt)
 	SVCXPRT *xprt;
 {
+	SVCXPRT_EXT *ext = SVCEXT(xprt);
 	struct cf_conn *cd;
 	struct cf_rendezvous *r;
 
@@ -425,6 +448,8 @@ __svc_vc_dodestroy(xprt)
 		XDR_DESTROY(&(cd->xdrs));
 		mem_free(cd, sizeof(struct cf_conn));
 	}
+	if (ext)
+		mem_free(ext, sizeof (*ext));
 	if (xprt->xp_auth != NULL) {
 		SVCAUTH_DESTROY(xprt->xp_auth);
 		xprt->xp_auth = NULL;

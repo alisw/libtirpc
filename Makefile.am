@@ -15,6 +15,7 @@ nobase_include_HEADERS = tirpc/netconfig.h \
 			 tirpc/rpc/svc.h \
 			 tirpc/rpc/svc_dg.h \
 			 tirpc/rpc/svc_auth.h \
+			 tirpc/rpc/svc_mt.h \
 			 tirpc/rpc/rpc_msg.h \
 			 tirpc/rpc/rpc.h \
 			 tirpc/rpc/rpcent.h \
