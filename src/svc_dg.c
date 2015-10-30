@@ -138,7 +138,6 @@ svc_dg_create(fd, sendsize, recvsize)
 	xprt->xp_fd = fd;
 	xprt->xp_p2 = su;
 	xprt->xp_p3 = ext;
-	xprt->xp_auth = NULL;
 	xprt->xp_verf.oa_base = su->su_verfbody;
 	svc_dg_ops(xprt);
 	xprt->xp_rtaddr.maxlen = sizeof (struct sockaddr_storage);
@@ -260,8 +259,9 @@ svc_dg_reply(xprt, msg)
 	XDR_SETPOS(xdrs, 0);
 	msg->rm_xid = su->su_xid;
 	if (xdr_replymsg(xdrs, msg) &&
-	    (!has_args || (xprt->xp_auth &&
-	     SVCAUTH_WRAP(xprt->xp_auth, xdrs, xdr_results, xdr_location)))) {
+	    (!has_args ||
+	     SVCAUTH_WRAP(&SVC_XP_AUTH(xprt),
+			  xdrs, xdr_results, xdr_location))) {
 		struct msghdr *msg = &su->su_msghdr;
 		struct iovec iov;
 
@@ -288,8 +288,9 @@ svc_dg_getargs(xprt, xdr_args, args_ptr)
 	xdrproc_t xdr_args;
 	void *args_ptr;
 {
-	if (! SVCAUTH_UNWRAP(xprt->xp_auth, &(su_data(xprt)->su_xdrs),
-			     xdr_args, args_ptr)) {
+	if (!SVCAUTH_UNWRAP(&SVC_XP_AUTH(xprt),
+			    &(su_data(xprt)->su_xdrs),
+			    xdr_args, args_ptr)) {
 		return FALSE;
 	}
 	return TRUE;

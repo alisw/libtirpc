@@ -180,7 +180,6 @@ svc_vc_create(fd, sendsize, recvsize)
 	xprt->xp_p1 = r;
 	xprt->xp_p2 = NULL;
 	xprt->xp_p3 = ext;
-	xprt->xp_auth = NULL;
 	xprt->xp_verf = _null_auth;
 	svc_vc_rendezvous_ops(xprt);
 	xprt->xp_port = (u_short)-1;	/* It is the rendezvouser */
@@ -307,7 +306,6 @@ makefd_xprt(fd, sendsize, recvsize)
 	    xprt, read_vc, write_vc);
 	xprt->xp_p1 = cd;
 	xprt->xp_p3 = ext;
-	xprt->xp_auth = NULL;
 	xprt->xp_verf.oa_base = cd->verf_body;
 	svc_vc_ops(xprt);  /* truely deals with calls */
 	xprt->xp_port = 0;  /* this is a connection, not a rendezvouser */
@@ -670,9 +668,9 @@ svc_vc_getargs(xprt, xdr_args, args_ptr)
 	assert(xprt != NULL);
 	/* args_ptr may be NULL */
 
-	if (! SVCAUTH_UNWRAP(xprt->xp_auth,
-			     &(((struct cf_conn *)(xprt->xp_p1))->xdrs),
-			     xdr_args, args_ptr)) {
+	if (!SVCAUTH_UNWRAP(&SVC_XP_AUTH(xprt),
+			    &(((struct cf_conn *)(xprt->xp_p1))->xdrs),
+			    xdr_args, args_ptr)) {
 		return FALSE;  
 	}
 	return TRUE;
@@ -729,8 +727,9 @@ svc_vc_reply(xprt, msg)
 	msg->rm_xid = cd->x_id;
 	rstat = FALSE;
 	if (xdr_replymsg(xdrs, msg) &&
-	    (!has_args || (xprt->xp_auth &&
-	     SVCAUTH_WRAP(xprt->xp_auth, xdrs, xdr_results, xdr_location)))) {
+	    (!has_args ||
+	     SVCAUTH_WRAP(&SVC_XP_AUTH(xprt),
+			  xdrs, xdr_results, xdr_location))) {
 		rstat = TRUE;
 	}
 	(void)xdrrec_endofrecord(xdrs, TRUE);

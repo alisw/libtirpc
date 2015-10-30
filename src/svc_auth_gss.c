@@ -277,7 +277,7 @@ svcauth_gss_accept_sec_context(struct svc_req *rqst,
 
 	gss_log_debug("in svcauth_gss_accept_context()");
 
-	gd = SVCAUTH_PRIVATE(rqst->rq_xprt->xp_auth);
+	gd = SVCAUTH_PRIVATE(&SVC_XP_AUTH(rqst->rq_xprt));
 	gc = (struct rpc_gss_cred *)rqst->rq_clntcred;
 	memset(gr, 0, sizeof(*gr));
 
@@ -422,10 +422,7 @@ svcauth_gss_nextverf(struct svc_req *rqst, u_int num)
 
 	gss_log_debug("in svcauth_gss_nextverf()");
 
-	if (rqst->rq_xprt->xp_auth == NULL)
-		return (FALSE);
-
-	gd = SVCAUTH_PRIVATE(rqst->rq_xprt->xp_auth);
+	gd = SVCAUTH_PRIVATE(&SVC_XP_AUTH(rqst->rq_xprt));
 
 	signbuf.value = &num;
 	signbuf.length = sizeof(num);
@@ -853,7 +850,7 @@ rpc_gss_svc_max_data_length(struct svc_req *rqst, int maxlen)
 	if (!rqst)
 		return 0;
 
-	gd = SVCAUTH_PRIVATE(rqst->rq_xprt->xp_auth);
+	gd = SVCAUTH_PRIVATE(&SVC_XP_AUTH(rqst->rq_xprt));
 
 	switch (gd->rcred.service) {
 	case rpcsec_gss_svc_none:
@@ -983,7 +980,6 @@ rpc_gss_getcred(struct svc_req *rqst, rpc_gss_rawcred_t **rcred,
 		rpc_gss_ucred_t **ucred, void **cookie)
 {
 	struct svc_rpc_gss_data	*gd;
-	SVCAUTH *auth;
 
 	if (rqst == NULL)
 		return FALSE;
@@ -991,8 +987,7 @@ rpc_gss_getcred(struct svc_req *rqst, rpc_gss_rawcred_t **rcred,
 	if (rqst->rq_xprt->xp_verf.oa_flavor != RPCSEC_GSS)
 		return FALSE;
 
-	auth = rqst->rq_xprt->xp_auth;
-	gd = SVCAUTH_PRIVATE(auth);
+	gd = SVCAUTH_PRIVATE(&SVC_XP_AUTH(rqst->rq_xprt));
 
 	if (rcred != NULL) {
 		gd->scratch = gd->rcred;

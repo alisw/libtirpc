@@ -119,7 +119,6 @@ typedef struct __rpc_svcxprt {
 	struct netbuf	xp_ltaddr;	 /* local transport address */
 	struct netbuf	xp_rtaddr;	 /* remote transport address */
 	struct opaque_auth xp_verf;	 /* raw response verifier */
-	SVCAUTH		*xp_auth;	 /* auth handle of current req */
 	void		*xp_p1;		 /* private: for use by svc ops */
 	void		*xp_p2;		 /* private: for use by svc ops */
 	void		*xp_p3;		 /* private: for use by svc lib */
