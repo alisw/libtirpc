@@ -54,7 +54,7 @@
 #include "rpc_com.h"
 #include "debug.h"
 
-#define	su_data(xprt)	((struct svc_dg_data *)(xprt->xp_p2))
+#define	su_data(xprt)	((struct svc_dg_data *)((xprt)->xp_p2))
 #define	rpc_buffer(xprt) ((xprt)->xp_p1)
 
 #ifndef MAX
