@@ -749,11 +749,6 @@ svc_getreq_common (fd)
 	  SVC_DESTROY (xprt);
 	  break;
 	}
-    else if ((xprt->xp_auth != NULL) &&
-	     (xprt->xp_auth->svc_ah_private == NULL))
-	{
-	  xprt->xp_auth = NULL;
-	}
     }
   while (stat == XPRT_MOREREQS);
 }

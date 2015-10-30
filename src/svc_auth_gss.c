@@ -87,6 +87,16 @@ static struct svc_auth_ops svc_auth_gss_ops = {
 	svcauth_gss_destroy
 };
 
+struct svcauth_gss_cache_entry {
+	SVCXPRT *xprt;
+	struct svc_rpc_gss_data	*gd;
+	time_t time_to_die;
+	struct svcauth_gss_cache_entry *next;
+};
+
+extern pthread_mutex_t			svcauth_gss_cache_lock;
+static struct svcauth_gss_cache_entry	*svcauth_gss_cache = NULL;
+
 struct svc_rpc_gss_callback {
 	struct svc_rpc_gss_callback	*cb_next;
 	rpc_gss_callback_t		cb_args;
@@ -479,39 +489,123 @@ svcauth_gss_callback(struct svc_req *rqst, struct svc_rpc_gss_data *gd)
 	return result;
 }
 
+static void
+destroy_gd(struct svc_rpc_gss_data *gd)
+{
+	OM_uint32		 min_stat;
+
+	gss_delete_sec_context(&min_stat, &gd->ctx, GSS_C_NO_BUFFER);
+	gss_release_buffer(&min_stat, &gd->cname);
+
+	if (gd->client_name)
+		gss_release_name(&min_stat, &gd->client_name);
+	if (gd->rcred.client_principal != NULL)
+		free(gd->rcred.client_principal);
+
+	mem_free(gd, sizeof(*gd));
+}
+
+/* call with svcauth_gss_cache_lock */
+static struct svcauth_gss_cache_entry **
+lookup_cache_entry(struct svc_req *rqst)
+{
+	struct svcauth_gss_cache_entry **ce;
+
+	/*
+	 * for now, only one set of gss data per xprt, which is borked,
+	 * but that gss data will at least survive if there are
+	 * interleaved calls with another cred flavor on the same xprt
+	 */
+	for (ce = &svcauth_gss_cache; *ce; ce = &(*ce)->next) {
+		if ((*ce)->xprt == rqst->rq_xprt)
+			break;
+	}
+
+	return (ce);
+}
+
+/* call with svcauth_gss_cache_lock */
+static void
+use_cache_entry(struct svcauth_gss_cache_entry **ce, time_t now)
+{
+	struct svcauth_gss_cache_entry *ce_new_head;
+
+	(*ce)->time_to_die = now + 300; /* 5 minutes */
+
+	if (ce == &svcauth_gss_cache)
+		return; /* ce already at the head */
+
+	ce_new_head = *ce;
+	*ce = (*ce)->next;
+	ce_new_head->next = svcauth_gss_cache;
+	svcauth_gss_cache = ce_new_head;
+}
+
+/* call with svcauth_gss_cache_lock */
+static void
+destroy_cold_cache_entries(time_t now)
+{
+	struct svcauth_gss_cache_entry **ce;
+
+	for (ce = &svcauth_gss_cache; *ce; ce = &(*ce)->next) {
+		if (now > (*ce)->time_to_die)
+			break;
+	}
+
+	while (*ce) {
+		struct svcauth_gss_cache_entry *ce_next = (*ce)->next;
+		destroy_gd((*ce)->gd);
+		mem_free(*ce, sizeof(**ce));
+		*ce = ce_next;
+	}
+}
+
 enum auth_stat
 _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 {
 	XDR	 		 xdrs;
-	SVCAUTH			*auth;
 	struct svc_rpc_gss_data	*gd;
 	struct rpc_gss_cred	*gc;
 	struct rpc_gss_init_res	 gr;
 	int			 call_stat, offset;
 	gss_qop_t		 qop;
+	struct svcauth_gss_cache_entry **ce;
+	time_t			 now;
 
 	gss_log_debug("in svcauth_gss()");
 
 	/* Initialize reply. */
 	rqst->rq_xprt->xp_verf = _null_auth;
 
-	/* Allocate and set up server auth handle. */
-	if (rqst->rq_xprt->xp_auth == NULL ||
-	    rqst->rq_xprt->xp_auth == &svc_auth_none) {
-		if ((auth = calloc(sizeof(*auth), 1)) == NULL) {
+	now = time(NULL);
+	mutex_lock(&svcauth_gss_cache_lock);
+	ce = lookup_cache_entry(rqst);
+	if (!*ce) {
+		/* no cache entry for this xprt, allocate and set it up */
+		if ((*ce = calloc(sizeof(**ce), 1)) == NULL) {
 			fprintf(stderr, "svcauth_gss: out_of_memory\n");
+			mutex_unlock(&svcauth_gss_cache_lock);
 			return (AUTH_FAILED);
 		}
 		if ((gd = calloc(sizeof(*gd), 1)) == NULL) {
+			free(*ce);
 			fprintf(stderr, "svcauth_gss: out_of_memory\n");
+			mutex_unlock(&svcauth_gss_cache_lock);
 			return (AUTH_FAILED);
 		}
-		auth->svc_ah_ops = &svc_auth_gss_ops;
-		auth->svc_ah_private = (caddr_t) gd;
 		gd->locked = FALSE;
-		rqst->rq_xprt->xp_auth = auth;
+		(*ce)->xprt = rqst->rq_xprt;
+		(*ce)->gd = gd;
+		(*ce)->next = NULL;
 	}
-	else gd = SVCAUTH_PRIVATE(rqst->rq_xprt->xp_auth);
+	else
+		gd = (*ce)->gd;
+	use_cache_entry(ce, now);
+	destroy_cold_cache_entries(now);
+	mutex_unlock(&svcauth_gss_cache_lock);
+
+	SVC_XP_AUTH(rqst->rq_xprt).svc_ah_ops = &svc_auth_gss_ops;
+	SVC_XP_AUTH(rqst->rq_xprt).svc_ah_private = (caddr_t) gd;
 
 	/* Deserialize client credentials. */
 	if (rqst->rq_cred.oa_length <= 0)
@@ -645,8 +739,9 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 		if (!svcauth_gss_release_cred())
 			return (AUTH_FAILED);
 
-		SVCAUTH_DESTROY(rqst->rq_xprt->xp_auth);
-		rqst->rq_xprt->xp_auth = &svc_auth_none;
+		SVCAUTH_DESTROY(&SVC_XP_AUTH(rqst->rq_xprt));
+		SVC_XP_AUTH(rqst->rq_xprt).svc_ah_ops = svc_auth_none.svc_ah_ops;
+		SVC_XP_AUTH(rqst->rq_xprt).svc_ah_private = NULL;
 
 		break;
 
@@ -661,22 +756,24 @@ static bool_t
 svcauth_gss_destroy(SVCAUTH *auth)
 {
 	struct svc_rpc_gss_data	*gd;
-	OM_uint32		 min_stat;
+	struct svcauth_gss_cache_entry **ce;
 
 	gss_log_debug("in svcauth_gss_destroy()");
 
 	gd = SVCAUTH_PRIVATE(auth);
 
-	gss_delete_sec_context(&min_stat, &gd->ctx, GSS_C_NO_BUFFER);
-	gss_release_buffer(&min_stat, &gd->cname);
+	mutex_lock(&svcauth_gss_cache_lock);
+	for (ce = &svcauth_gss_cache; *ce; ce = &(*ce)->next) {
+		if ((*ce)->gd == gd) {
+			struct svcauth_gss_cache_entry *ce_destroy = *ce;
+			*ce = (*ce)->next;
+			mem_free(ce_destroy, sizeof(*ce_destroy));
+			break;
+		}
+	}
+	mutex_unlock(&svcauth_gss_cache_lock);
 
-	if (gd->client_name)
-		gss_release_name(&min_stat, &gd->client_name);
-	if (gd->rcred.client_principal != NULL)
-		free(gd->rcred.client_principal);
-
-	mem_free(gd, sizeof(*gd));
-	mem_free(auth, sizeof(*auth));
+	destroy_gd(gd);
 
 	return (TRUE);
 }

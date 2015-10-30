@@ -317,10 +317,6 @@ svc_dg_destroy(xprt)
 	xprt_unregister(xprt);
 	if (xprt->xp_fd != -1)
 		(void)close(xprt->xp_fd);
-	if (xprt->xp_auth != NULL) {
-		SVCAUTH_DESTROY(xprt->xp_auth);
-		xprt->xp_auth = NULL;
-	}
 	XDR_DESTROY(&(su->su_xdrs));
 	(void) mem_free(rpc_buffer(xprt), su->su_iosz);
 	(void) mem_free(su, sizeof (*su));

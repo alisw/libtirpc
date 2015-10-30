@@ -64,6 +64,8 @@ struct authsvc {
 };
 static struct authsvc *Auths = NULL;
 
+extern SVCAUTH svc_auth_none;
+
 /*
  * The call rpc message, msg has been obtained from the wire.  The msg contains
  * the raw form of credentials and verifiers.  authenticate returns AUTH_OK
@@ -96,6 +98,10 @@ _gss_authenticate(rqst, msg, no_dispatch)
 /* VARIABLES PROTECTED BY authsvc_lock: asp, Auths */
 
 	rqst->rq_cred = msg->rm_call.cb_cred;
+	SVC_XP_AUTH(rqst->rq_xprt).svc_ah_ops = svc_auth_none.svc_ah_ops;
+	SVC_XP_AUTH(rqst->rq_xprt).svc_ah_private = NULL;
+	/* redirect xp_auth pointer for compatibility */
+	rqst->rq_xprt->xp_auth = &SVC_XP_AUTH(rqst->rq_xprt);
 	rqst->rq_xprt->xp_verf.oa_flavor = _null_auth.oa_flavor;
 	rqst->rq_xprt->xp_verf.oa_length = 0;
 	cred_flavor = rqst->rq_cred.oa_flavor;

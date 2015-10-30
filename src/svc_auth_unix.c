@@ -69,8 +69,6 @@ _svcauth_unix(rqst, msg)
 	assert(rqst != NULL);
 	assert(msg != NULL);
 
-	rqst->rq_xprt->xp_auth = &svc_auth_none;
-
 	area = (struct area *) rqst->rq_clntcred;
 	aup = &area->area_aup;
 	aup->aup_machname = area->area_machname;
@@ -146,6 +144,5 @@ _svcauth_short(rqst, msg)
 	struct svc_req *rqst;
 	struct rpc_msg *msg;
 {
-	rqst->rq_xprt->xp_auth = &svc_auth_none;
 	return (AUTH_REJECTEDCRED);
 }

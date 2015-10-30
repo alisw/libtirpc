@@ -33,11 +33,15 @@
 
 typedef struct __rpc_svcxprt_ext {
 	int 		flags;
+	SVCAUTH		xp_auth;
 } SVCXPRT_EXT;
 
 
 #define SVCEXT(xprt)					\
 	((SVCXPRT_EXT *)(xprt)->xp_p3)
+
+#define SVC_XP_AUTH(xprt)				\
+	(SVCEXT(xprt)->xp_auth)
 
 #define SVC_VERSQUIET 0x0001	/* keep quiet about version mismatch */
 
