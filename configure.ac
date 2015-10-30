@@ -29,7 +29,7 @@ AC_PROG_CC
 # In addition to these rules, symbol versioning is now in effect. soname
 # changes should be avoided.
 #
-LT_VERSION_INFO="2:0:1"
+LT_VERSION_INFO="3:0:0"
 AC_SUBST([LT_VERSION_INFO])
 
 AC_CHECK_HEADER([gssapi/gssapi.h], [HAVE_GSSAPI_H=yes], [HAVE_GSSAPI_H=no])
