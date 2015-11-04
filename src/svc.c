@@ -99,7 +99,7 @@ xprt_register (xprt)
     {
       __svc_xports = (SVCXPRT **) calloc (_rpc_dtablesize(), sizeof (SVCXPRT *));
       if (__svc_xports == NULL)
-	return;
+            goto unlock;
     }
   if (sock < _rpc_dtablesize())
     {
@@ -120,14 +120,14 @@ xprt_register (xprt)
             svc_pollfd[i].fd = sock;
             svc_pollfd[i].events = (POLLIN | POLLPRI |
                                     POLLRDNORM | POLLRDBAND);
-            return;
+            goto unlock;
           }
 
       new_svc_pollfd = (struct pollfd *) realloc (svc_pollfd,
                                                   sizeof (struct pollfd)
                                                   * (svc_max_pollfd + 1));
       if (new_svc_pollfd == NULL) /* Out of memory */
-        return;
+        goto unlock;
       svc_pollfd = new_svc_pollfd;
       ++svc_max_pollfd;
 
@@ -135,6 +135,7 @@ xprt_register (xprt)
       svc_pollfd[svc_max_pollfd - 1].events = (POLLIN | POLLPRI |
                                                POLLRDNORM | POLLRDBAND);
     }
+unlock:
   rwlock_unlock (&svc_fd_lock);
 }
 
