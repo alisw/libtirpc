@@ -579,6 +579,7 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 	struct svcauth_gss_cache_entry **ce;
 	time_t			 now;
 	enum auth_stat		 result = AUTH_OK;
+	OM_uint32		 min_stat;
 
 	gss_log_debug("in svcauth_gss()");
 
@@ -710,6 +711,9 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 
 		call_stat = svc_sendreply(rqst->rq_xprt, 
 			(xdrproc_t)xdr_rpc_gss_init_res, (caddr_t)&gr);
+
+		gss_release_buffer(&min_stat, &gr.gr_token);
+		free(gr.gr_ctx.value);
 
 		if (!call_stat) {
 			result = AUTH_FAILED;
