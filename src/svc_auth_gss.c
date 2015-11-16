@@ -354,8 +354,11 @@ svcauth_gss_accept_sec_context(struct svc_req *rqst,
 			return (FALSE);
 
 		rqst->rq_xprt->xp_verf.oa_flavor = RPCSEC_GSS;
-		rqst->rq_xprt->xp_verf.oa_base = checksum.value;
+		memcpy(rqst->rq_xprt->xp_verf.oa_base, checksum.value,
+			checksum.length);
 		rqst->rq_xprt->xp_verf.oa_length = checksum.length;
+
+		gss_release_buffer(&min_stat, &checksum);
 	}
 	return (TRUE);
 }
@@ -437,9 +440,12 @@ svcauth_gss_nextverf(struct svc_req *rqst, u_int num)
 			maj_stat, min_stat);
 		return (FALSE);
 	}
+
 	rqst->rq_xprt->xp_verf.oa_flavor = RPCSEC_GSS;
-	rqst->rq_xprt->xp_verf.oa_base = (caddr_t)checksum.value;
+	memcpy(rqst->rq_xprt->xp_verf.oa_base, checksum.value, checksum.length);
 	rqst->rq_xprt->xp_verf.oa_length = (u_int)checksum.length;
+
+	gss_release_buffer(&min_stat, &checksum);
 
 	return (TRUE);
 }
@@ -655,6 +661,8 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 		rqst->rq_clntname = (char *)gd->client_name;
 		rqst->rq_svcname = (char *)gd->ctx;
 	}
+
+	rqst->rq_xprt->xp_verf.oa_base = msg->rm_call.cb_verf.oa_base;
 
 	/* Handle RPCSEC_GSS control procedure. */
 	switch (gc->gc_proc) {
