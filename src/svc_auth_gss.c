@@ -169,6 +169,7 @@ svcauth_gss_import_name(char *service)
 	gss_name_t	name;
 	gss_buffer_desc	namebuf;
 	OM_uint32	maj_stat, min_stat;
+	bool_t		result;
 
 	gss_log_debug("in svcauth_gss_import_name()");
 
@@ -183,11 +184,9 @@ svcauth_gss_import_name(char *service)
 			maj_stat, min_stat);
 		return (FALSE);
 	}
-	if (svcauth_gss_set_svc_name(name) != TRUE) {
-		gss_release_name(&min_stat, &name);
-		return (FALSE);
-	}
-	return (TRUE);
+	result = svcauth_gss_set_svc_name(name);
+	gss_release_name(&min_stat, &name);
+	return result;
 }
 
 static bool_t
