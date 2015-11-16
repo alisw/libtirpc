@@ -302,6 +302,8 @@ svcauth_gss_accept_sec_context(struct svc_req *rqst,
 					      NULL,
 					      &gd->deleg);
 
+	xdr_free((xdrproc_t)xdr_rpc_gss_init_args, (caddr_t)&recv_tok);
+
 	if (gr->gr_major != GSS_S_COMPLETE &&
 	    gr->gr_major != GSS_S_CONTINUE_NEEDED) {
 		gss_log_status("svcauth_gss_accept_sec_context: accept_sec_context",
@@ -576,6 +578,7 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 	gss_qop_t		 qop;
 	struct svcauth_gss_cache_entry **ce;
 	time_t			 now;
+	enum auth_stat		 result = AUTH_OK;
 
 	gss_log_debug("in svcauth_gss()");
 
@@ -629,19 +632,25 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 	XDR_DESTROY(&xdrs);
 
 	/* Check version. */
-	if (gc->gc_v != RPCSEC_GSS_VERSION)
-		return (AUTH_BADCRED);
+	if (gc->gc_v != RPCSEC_GSS_VERSION) {
+		result = AUTH_BADCRED;
+		goto out;
+	}
 
 	/* Check RPCSEC_GSS service. */
 	if (gc->gc_svc != RPCSEC_GSS_SVC_NONE &&
 	    gc->gc_svc != RPCSEC_GSS_SVC_INTEGRITY &&
-	    gc->gc_svc != RPCSEC_GSS_SVC_PRIVACY)
-		return (AUTH_BADCRED);
+	    gc->gc_svc != RPCSEC_GSS_SVC_PRIVACY) {
+		result = AUTH_BADCRED;
+		goto out;
+	}
 
 	/* Check sequence number. */
 	if (gd->established) {
-		if (gc->gc_seq > MAXSEQ)
-			return (RPCSEC_GSS_CTXPROBLEM);
+		if (gc->gc_seq > MAXSEQ) {
+			result = RPCSEC_GSS_CTXPROBLEM;
+			goto out;
+		}
 
 		if ((offset = gd->seqlast - gc->gc_seq) < 0) {
 			gd->seqlast = gc->gc_seq;
@@ -651,7 +660,8 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 		}
 		else if (offset >= gd->win || (gd->seqmask & (1 << offset))) {
 			*no_dispatch = 1;
-			return (RPCSEC_GSS_CTXPROBLEM);
+			result = RPCSEC_GSS_CTXPROBLEM;
+			goto out;
 		}
 		gd->seq = gc->gc_seq;
 		gd->seqmask |= (1 << offset);
@@ -669,30 +679,42 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 
 	case RPCSEC_GSS_INIT:
 	case RPCSEC_GSS_CONTINUE_INIT:
-		if (rqst->rq_proc != NULLPROC)
-			return (AUTH_FAILED);		/* XXX ? */
-
-		if (_svcauth_gss_name == GSS_C_NO_NAME) {
-			if (!svcauth_gss_import_name("nfs"))
-				return (AUTH_FAILED);
+		if (rqst->rq_proc != NULLPROC) {
+			result = AUTH_FAILED;		/* XXX ? */
+			break;
 		}
 
-		if (!svcauth_gss_acquire_cred())
-			return (AUTH_FAILED);
+		if (_svcauth_gss_name == GSS_C_NO_NAME) {
+			if (!svcauth_gss_import_name("nfs")) {
+				result = AUTH_FAILED;
+				break;
+			}
+		}
 
-		if (!svcauth_gss_accept_sec_context(rqst, &gr))
-			return (AUTH_REJECTEDCRED);
+		if (!svcauth_gss_acquire_cred()) {
+			result = AUTH_FAILED;
+			break;
+		}
 
-		if (!svcauth_gss_nextverf(rqst, htonl(gr.gr_win)))
-			return (AUTH_FAILED);
+		if (!svcauth_gss_accept_sec_context(rqst, &gr)) {
+			result = AUTH_REJECTEDCRED;
+			break;
+		}
+
+		if (!svcauth_gss_nextverf(rqst, htonl(gr.gr_win))) {
+			result = AUTH_FAILED;
+			break;
+		}
 
 		*no_dispatch = TRUE;
 
 		call_stat = svc_sendreply(rqst->rq_xprt, 
 			(xdrproc_t)xdr_rpc_gss_init_res, (caddr_t)&gr);
 
-		if (!call_stat)
-			return (AUTH_FAILED);
+		if (!call_stat) {
+			result = AUTH_FAILED;
+			break;
+		}
 
 		if (gr.gr_major == GSS_S_COMPLETE)
 			gd->established = TRUE;
@@ -700,27 +722,37 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 		break;
 
 	case RPCSEC_GSS_DATA:
-		if (!svcauth_gss_validate(gd, msg, &qop))
-			return (RPCSEC_GSS_CREDPROBLEM);
+		if (!svcauth_gss_validate(gd, msg, &qop)) {
+			result = RPCSEC_GSS_CREDPROBLEM;
+			break;
+		}
 
-		if (!svcauth_gss_nextverf(rqst, htonl(gc->gc_seq)))
-			return (AUTH_FAILED);
+		if (!svcauth_gss_nextverf(rqst, htonl(gc->gc_seq))) {
+			result = AUTH_FAILED;
+			break;
+		}
 
 		if (!gd->callback_done) {
 			gd->callback_done = TRUE;
 			gd->sec.qop = qop;
 			(void)rpc_gss_num_to_qop(gd->rcred.mechanism,
 						gd->sec.qop, &gd->rcred.qop);
-			if (!svcauth_gss_callback(rqst, gd))
-				return (AUTH_REJECTEDCRED);
+			if (!svcauth_gss_callback(rqst, gd)) {
+				result = AUTH_REJECTEDCRED;
+				break;
+			}
 		}
 
 		if (gd->locked) {
 			if (gd->rcred.service !=
-					_rpc_gss_svc_to_service(gc->gc_svc))
-				return (AUTH_FAILED);
-			if (gd->sec.qop != qop)
-				return (AUTH_BADVERF);
+					_rpc_gss_svc_to_service(gc->gc_svc)) {
+				result = AUTH_FAILED;
+				break;
+			}
+			if (gd->sec.qop != qop) {
+				result = AUTH_BADVERF;
+				break;
+			}
 		}
 
 		if (gd->sec.qop != qop) {
@@ -734,17 +766,25 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 		break;
 
 	case RPCSEC_GSS_DESTROY:
-		if (rqst->rq_proc != NULLPROC)
-			return (AUTH_FAILED);		/* XXX ? */
+		if (rqst->rq_proc != NULLPROC) {
+			result = AUTH_FAILED;		/* XXX ? */
+			break;
+		}
 
-		if (!svcauth_gss_validate(gd, msg, &qop))
-			return (RPCSEC_GSS_CREDPROBLEM);
+		if (!svcauth_gss_validate(gd, msg, &qop)) {
+			result = RPCSEC_GSS_CREDPROBLEM;
+			break;
+		}
 
-		if (!svcauth_gss_nextverf(rqst, htonl(gc->gc_seq)))
-			return (AUTH_FAILED);
+		if (!svcauth_gss_nextverf(rqst, htonl(gc->gc_seq))) {
+			result = AUTH_FAILED;
+			break;
+		}
 
-		if (!svcauth_gss_release_cred())
-			return (AUTH_FAILED);
+		if (!svcauth_gss_release_cred()) {
+			result = AUTH_FAILED;
+			break;
+		}
 
 		SVCAUTH_DESTROY(&SVC_XP_AUTH(rqst->rq_xprt));
 		SVC_XP_AUTH(rqst->rq_xprt).svc_ah_ops = svc_auth_none.svc_ah_ops;
@@ -753,10 +793,12 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 		break;
 
 	default:
-		return (AUTH_REJECTEDCRED);
+		result = AUTH_REJECTEDCRED;
 		break;
 	}
-	return (AUTH_OK);
+out:
+	xdr_free((xdrproc_t)xdr_rpc_gss_cred, (caddr_t)gc);
+	return result;
 }
 
 static bool_t
