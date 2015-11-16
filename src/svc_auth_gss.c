@@ -129,6 +129,8 @@ struct svc_rpc_gss_data {
 	((struct svc_rpc_gss_data *)(auth)->svc_ah_private)
 
 /* Global server credentials. */
+static u_int		_svcauth_req_time = 0;
+static gss_OID_set_desc	_svcauth_oid_set = {1, GSS_C_NULL_OID };
 static gss_cred_id_t	_svcauth_gss_creds;
 static gss_name_t	_svcauth_gss_name = GSS_C_NO_NAME;
 static char *		_svcauth_svc_name = NULL;
@@ -189,14 +191,15 @@ svcauth_gss_import_name(char *service)
 }
 
 static bool_t
-svcauth_gss_acquire_cred(u_int req_time, gss_OID_set_desc *oid_set)
+svcauth_gss_acquire_cred(void)
 {
 	OM_uint32	maj_stat, min_stat;
 
 	gss_log_debug("in svcauth_gss_acquire_cred()");
 
-	maj_stat = gss_acquire_cred(&min_stat, _svcauth_gss_name, req_time,
-				    oid_set, GSS_C_ACCEPT,
+	maj_stat = gss_acquire_cred(&min_stat, _svcauth_gss_name,
+				    _svcauth_req_time, &_svcauth_oid_set,
+				    GSS_C_ACCEPT,
 				    &_svcauth_gss_creds, NULL, NULL);
 
 	if (maj_stat != GSS_S_COMPLETE) {
@@ -667,7 +670,7 @@ _svcauth_gss(struct svc_req *rqst, struct rpc_msg *msg, bool_t *no_dispatch)
 				return (AUTH_FAILED);
 		}
 
-		if (!svcauth_gss_acquire_cred(0, GSS_C_NULL_OID_SET))
+		if (!svcauth_gss_acquire_cred())
 			return (AUTH_FAILED);
 
 		if (!svcauth_gss_accept_sec_context(rqst, &gr))
@@ -890,7 +893,6 @@ bool_t
 rpc_gss_set_svc_name(char *principal, char *mechanism, u_int req_time,
 		u_int UNUSED(program), u_int UNUSED(version))
 {
-	gss_OID_set_desc oid_set;
 	rpc_gss_OID oid;
 	char *save;
 
@@ -902,14 +904,13 @@ rpc_gss_set_svc_name(char *principal, char *mechanism, u_int req_time,
 
 	if (!rpc_gss_mech_to_oid(mechanism, &oid))
 		goto out_err;
-	oid_set.count = 1;
-	oid_set.elements = (gss_OID)oid;
 
 	if (!svcauth_gss_import_name(principal))
 		goto out_err;
-	if (!svcauth_gss_acquire_cred(req_time, &oid_set))
-		goto out_err;
 
+	_svcauth_req_time = req_time;
+	_svcauth_oid_set.count = 1;
+	_svcauth_oid_set.elements = (gss_OID)oid;
 	free(_svcauth_svc_name);
 	_svcauth_svc_name = save;
 	return TRUE;
