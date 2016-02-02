@@ -60,10 +60,11 @@ struct rpcent {
 extern struct rpcent *getrpcbyname(const char *);
 extern struct rpcent *getrpcbynumber(int);
 extern struct rpcent *getrpcent(void);
-#endif
 
 extern void setrpcent(int);
 extern void endrpcent(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
