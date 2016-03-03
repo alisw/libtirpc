@@ -46,6 +46,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
@@ -67,7 +68,8 @@ rtime(addrp, timep, timeout)
 	struct timeval *timeout;
 {
 	int s;
-	fd_set readfds;
+	struct pollfd fd;
+	int milliseconds;
 	int res;
 	unsigned long thetime;
 	struct sockaddr_in from;
@@ -94,31 +96,32 @@ rtime(addrp, timep, timeout)
 	addrp->sin_port = serv->s_port;
 
 	if (type == SOCK_DGRAM) {
-		res = sendto(s, (char *)&thetime, sizeof(thetime), 0, 
+		res = sendto(s, (char *)&thetime, sizeof(thetime), 0,
 			     (struct sockaddr *)addrp, sizeof(*addrp));
 		if (res < 0) {
 			do_close(s);
-			return(-1);	
+			return(-1);
 		}
-		do {
-			FD_ZERO(&readfds);
-			FD_SET(s, &readfds);
-			res = select(_rpc_dtablesize(), &readfds,
-				     (fd_set *)NULL, (fd_set *)NULL, timeout);
-		} while (res < 0 && errno == EINTR);
+
+		milliseconds = (timeout->tv_sec * 1000) + (timeout->tv_usec / 1000);
+		fd.fd = s;
+		fd.events = POLLIN;
+		do
+		  res = poll (&fd, 1, milliseconds);
+		while (res < 0 && errno == EINTR);
 		if (res <= 0) {
 			if (res == 0) {
 				errno = ETIMEDOUT;
 			}
 			do_close(s);
-			return(-1);	
+			return(-1);
 		}
 		fromlen = sizeof(from);
-		res = recvfrom(s, (char *)&thetime, sizeof(thetime), 0, 
+		res = recvfrom(s, (char *)&thetime, sizeof(thetime), 0,
 			       (struct sockaddr *)&from, &fromlen);
 		do_close(s);
 		if (res < 0) {
-			return(-1);	
+			return(-1);
 		}
 	} else {
 		if (connect(s, (struct sockaddr *)addrp, sizeof(*addrp)) < 0) {
