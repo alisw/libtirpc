@@ -270,14 +270,8 @@ makefd_xprt(fd, sendsize, recvsize)
 	struct cf_conn *cd;
 	const char *netid;
 	struct __rpc_sockinfo si;
- 
-	assert(fd != -1);
 
-        if (fd >= FD_SETSIZE) {
-                warnx("svc_vc: makefd_xprt: fd too high\n");
-                xprt = NULL;
-                goto done;
-        }
+	assert(fd != -1);
 
 	xprt = mem_alloc(sizeof(SVCXPRT));
 	if (xprt == NULL) {
