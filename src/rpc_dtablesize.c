@@ -27,21 +27,13 @@
  */
 
 #include <unistd.h>
-
 #include <sys/select.h>
-
-int _rpc_dtablesize(void);	/* XXX */
+#include <rpc/clnt.h>
+#include <rpc/rpc_com.h>
 
 /*
  * Cache the result of getdtablesize(), so we don't have to do an
  * expensive system call every time.
- */
-/*
- * XXX In FreeBSD 2.x, you can have the maximum number of open file
- * descriptors be greater than FD_SETSIZE (which us 256 by default).
- *
- * Since old programs tend to use this call to determine the first arg
- * for _select(), having this return > FD_SETSIZE is a Bad Idea(TM)!
  */
 int
 _rpc_dtablesize(void)
