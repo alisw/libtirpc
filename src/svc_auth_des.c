@@ -86,13 +86,13 @@ static struct cache_entry *authdes_cache/* [AUTHDES_CACHESZ] */;
 static short *authdes_lru/* [AUTHDES_CACHESZ] */;
 
 static void cache_init();	/* initialize the cache */
-static short cache_spot();	/* find an entry in the cache */
-static void cache_ref(/*short sid*/);	/* note that sid was ref'd */
+static short cache_spot(des_block *key, char *name, struct timeval *timestamp);  /* find an entry in the cache */
+static void cache_ref(short sid);	/* note that sid was ref'd */
 
-static void invalidate();	/* invalidate entry in cache */
+static void invalidate(char *cred);	/* invalidate entry in cache */
 
 /*
- * cache statistics 
+ * cache statistics
  */
 static struct {
 	u_long ncachehits;	/* times cache hit, and is not replay */
