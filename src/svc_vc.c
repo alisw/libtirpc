@@ -332,22 +332,10 @@ rendezvous_request(xprt, msg)
 	r = (struct cf_rendezvous *)xprt->xp_p1;
 again:
 	len = sizeof addr;
-	if ((sock = accept(xprt->xp_fd, (struct sockaddr *)(void *)&addr,
-	    &len)) < 0) {
+	sock = accept(xprt->xp_fd, (struct sockaddr *)(void *)&addr, &len);
+	if (sock < 0) {
 		if (errno == EINTR)
 			goto again;
-
-		if (errno == EMFILE || errno == ENFILE) {
-		  /* If there are no file descriptors available, then accept will fail.
-		     We want to delay here so the connection request can be dequeued;
-		     otherwise we can bounce between polling and accepting, never
-		     giving the request a chance to dequeue and eating an enormous
-		     amount of cpu time in svc_run if we're polling on many file
-		     descriptors.  */
-		        struct timespec ts = { .tv_sec = 0, .tv_nsec = 50000000 };
-                        nanosleep (&ts, NULL);
-			goto again;
-		}
 		return (FALSE);
 	}
 	/*
