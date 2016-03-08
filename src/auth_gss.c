@@ -526,6 +526,14 @@ _rpc_gss_refresh(AUTH *auth, rpc_gss_options_ret_t *options_ret)
 			     gr.gr_major != GSS_S_CONTINUE_NEEDED)) {
 				options_ret->major_status = gr.gr_major;
 				options_ret->minor_status = gr.gr_minor;
+				if (call_stat != RPC_SUCCESS) {
+					struct rpc_err err;
+					clnt_geterr(gd->clnt, &err);
+					LIBTIRPC_DEBUG(1, ("authgss_refresh: %s errno: %s",
+						clnt_sperrno(call_stat), strerror(err.re_errno)));
+				} else
+					gss_log_status("authgss_refresh:", 
+						gr.gr_major, gr.gr_minor);
 				return FALSE;
 			}
 
