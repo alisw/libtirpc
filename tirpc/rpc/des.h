@@ -82,6 +82,6 @@ struct desparams {
 /*
  * Software DES.
  */
-extern int _des_crypt( char *, int, struct desparams * );
+extern int _des_crypt( char *, unsigned, struct desparams * );
 
 #endif

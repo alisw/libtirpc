@@ -6,7 +6,8 @@
 /* see <http://www.gnu.org/licenses/> to obtain a copy.  */
 #include <string.h>
 #include <stdint.h>
-#include <rpc/rpc_des.h>
+#include <sys/types.h>
+#include <rpc/des.h>
 
 
 static const uint32_t des_SPtrans[8][64] =
