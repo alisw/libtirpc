@@ -61,8 +61,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <rpcsvc/nis.h>
 
+#include "nis.h"
 #include "rpc_com.h"
 
 extern mutex_t	rpcsoc_lock;

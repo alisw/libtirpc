@@ -46,8 +46,8 @@
 #include <rpc/clnt.h>
 #include <rpc/xdr.h>
 #include <sys/socket.h>
-#undef NIS
-#include <rpcsvc/nis.h>
+
+#include "nis.h"
 
 #if defined(LIBC_SCCS) && !defined(lint)
 #endif

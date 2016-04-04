@@ -44,8 +44,8 @@
 #include <rpc/rpcb_prot.h>
 //#include <clnt_soc.h>
 #include <sys/select.h>
-#undef NIS
-#include <rpcsvc/nis.h>
+
+#include "nis.h"
 
 
 #ifdef TESTING
