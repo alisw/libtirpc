@@ -233,15 +233,16 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 		assert(vc_cv != (cond_t *) NULL);
 
 	/*
-	 * XXX - fvdl connecting while holding a mutex?
+	 * Do not hold mutex during connect
 	 */
+	mutex_unlock(&clnt_fd_lock);
+
 	slen = sizeof ss;
 	if (getpeername(fd, (struct sockaddr *)&ss, &slen) < 0) {
 		if (errno != ENOTCONN) {
 			struct rpc_createerr *ce = &get_rpc_createerr();
 			ce->cf_stat = RPC_SYSTEMERROR;
 			ce->cf_error.re_errno = errno;
-			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
 			goto err;
 		}
@@ -249,12 +250,10 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 			struct rpc_createerr *ce = &get_rpc_createerr();
 			ce->cf_stat = RPC_SYSTEMERROR;
 			ce->cf_error.re_errno = errno;
-			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
 			goto err;
 		}
 	}
-	mutex_unlock(&clnt_fd_lock);
 	if (!__rpc_fd2sockinfo(fd, &si))
 		goto err;
 	thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
