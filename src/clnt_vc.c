@@ -191,10 +191,10 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 	ct = (struct ct_data *)mem_alloc(sizeof (*ct));
 	if ((cl == (CLIENT *)NULL) || (ct == (struct ct_data *)NULL)) {
 		struct rpc_createerr *ce = &get_rpc_createerr();
-		(void) syslog(LOG_ERR, clnt_vc_errstr,
-		    clnt_vc_str, __no_mem_str);
 		ce->cf_stat = RPC_SYSTEMERROR;
 		ce->cf_error.re_errno = errno;
+		(void) syslog(LOG_ERR, clnt_vc_errstr,
+		    clnt_vc_str, __no_mem_str);
 		goto err;
 	}
 	ct->ct_addr.buf = NULL;
