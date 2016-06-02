@@ -247,11 +247,13 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 			goto err;
 		}
 		if (connect(fd, (struct sockaddr *)raddr->buf, raddr->len) < 0){
-			struct rpc_createerr *ce = &get_rpc_createerr();
-			ce->cf_stat = RPC_SYSTEMERROR;
-			ce->cf_error.re_errno = errno;
-			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
-			goto err;
+			if (errno != EISCONN) {
+				struct rpc_createerr *ce = &get_rpc_createerr();
+				ce->cf_stat = RPC_SYSTEMERROR;
+				ce->cf_error.re_errno = errno;
+				thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+				goto err;
+			}
 		}
 	}
 	if (!__rpc_fd2sockinfo(fd, &si))
