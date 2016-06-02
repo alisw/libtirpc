@@ -72,6 +72,8 @@
 #define CMGROUP_MAX    16
 #define SCM_CREDS      0x03            /* process creds (struct cmsgcred) */
 
+#undef rpc_createerr                   /* make it clear it is a thread safe variable */
+
 /*
  * Credentials structure, used to verify the identity of a peer
  * process that has sent us a message. This is allocated by the
@@ -188,10 +190,11 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 	cl = (CLIENT *)mem_alloc(sizeof (*cl));
 	ct = (struct ct_data *)mem_alloc(sizeof (*ct));
 	if ((cl == (CLIENT *)NULL) || (ct == (struct ct_data *)NULL)) {
+		struct rpc_createerr *ce = &get_rpc_createerr();
 		(void) syslog(LOG_ERR, clnt_vc_errstr,
 		    clnt_vc_str, __no_mem_str);
-		rpc_createerr.cf_stat = RPC_SYSTEMERROR;
-		rpc_createerr.cf_error.re_errno = errno;
+		ce->cf_stat = RPC_SYSTEMERROR;
+		ce->cf_error.re_errno = errno;
 		goto err;
 	}
 	ct->ct_addr.buf = NULL;
@@ -235,15 +238,17 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 	slen = sizeof ss;
 	if (getpeername(fd, (struct sockaddr *)&ss, &slen) < 0) {
 		if (errno != ENOTCONN) {
-			rpc_createerr.cf_stat = RPC_SYSTEMERROR;
-			rpc_createerr.cf_error.re_errno = errno;
+			struct rpc_createerr *ce = &get_rpc_createerr();
+			ce->cf_stat = RPC_SYSTEMERROR;
+			ce->cf_error.re_errno = errno;
 			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
 			goto err;
 		}
 		if (connect(fd, (struct sockaddr *)raddr->buf, raddr->len) < 0){
-			rpc_createerr.cf_stat = RPC_SYSTEMERROR;
-			rpc_createerr.cf_error.re_errno = errno;
+			struct rpc_createerr *ce = &get_rpc_createerr();
+			ce->cf_stat = RPC_SYSTEMERROR;
+			ce->cf_error.re_errno = errno;
 			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
 			goto err;
