@@ -57,8 +57,8 @@ getrpcport(host, prognum, versnum, proto)
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port =  0;
-	if (hp->h_length > sizeof(addr))
-	  hp->h_length = sizeof(addr);
+	if (hp->h_length > sizeof(addr.sin_addr.s_addr))
+		hp->h_length = sizeof(addr.sin_addr.s_addr);
 	memcpy(&addr.sin_addr.s_addr, hp->h_addr, (size_t)hp->h_length);
 	/* Inconsistent interfaces need casts! :-( */
 	return (pmap_getport(&addr, (u_long)prognum, (u_long)versnum, 
