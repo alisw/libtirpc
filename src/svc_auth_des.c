@@ -356,7 +356,7 @@ cache_init()
 
 	authdes_cache = (struct cache_entry *)
 		mem_alloc(sizeof(struct cache_entry) * AUTHDES_CACHESZ);	
-	bzero((char *)authdes_cache, 
+	memset(authdes_cache, 0,
 		sizeof(struct cache_entry) * AUTHDES_CACHESZ);
 
 	authdes_lru = (short *)mem_alloc(sizeof(short) * AUTHDES_CACHESZ);

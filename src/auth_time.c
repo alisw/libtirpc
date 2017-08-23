@@ -317,7 +317,7 @@ __rpc_get_time_offset(td, srv, thost, uaddr, netid)
 	sprintf(ipuaddr, "%d.%d.%d.%d.0.111", a1, a2, a3, a4);
 	useua = &ipuaddr[0];
 
-	bzero((char *)&sin, sizeof(sin));
+	memset(&sin, 0, sizeof(sin));
 	if (uaddr_to_sockaddr(useua, &sin)) {
 		msg("unable to translate uaddr to sockaddr.");
 		if (needfree)
