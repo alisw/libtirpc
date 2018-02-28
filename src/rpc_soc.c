@@ -67,6 +67,8 @@
 
 extern mutex_t	rpcsoc_lock;
 
+extern int __binddynport(int fd);
+
 static CLIENT *clnt_com_create(struct sockaddr_in *, rpcprog_t, rpcvers_t,
     int *, u_int, u_int, char *, int);
 static SVCXPRT *svc_com_create(int, u_int, u_int, char *);
@@ -145,7 +147,8 @@ clnt_com_create(raddr, prog, vers, sockp, sendsz, recvsz, tp, flags)
 	bindaddr.maxlen = bindaddr.len =  sizeof (struct sockaddr_in);
 	bindaddr.buf = raddr;
 
-	bindresvport(fd, NULL);
+	if (__binddynport(fd) == -1)
+		goto err;
 	cl = clnt_tli_create(fd, nconf, &bindaddr, prog, vers,
 				sendsz, recvsz);
 	if (cl) {
@@ -313,7 +316,6 @@ svc_com_create(fd, sendsize, recvsize, netid)
 	SVCXPRT *svc;
 	int madefd = FALSE;
 	int port;
-	struct sockaddr_in sin;
 
 	if ((nconf = __rpc_getconfip(netid)) == NULL) {
 		(void) syslog(LOG_ERR, "Could not get %s transport", netid);
@@ -330,10 +332,6 @@ svc_com_create(fd, sendsize, recvsize, netid)
 		madefd = TRUE;
 	}
 
-	memset(&sin, 0, sizeof sin);
-	sin.sin_family = AF_INET;
-	bindresvport(fd, &sin);
-	listen(fd, SOMAXCONN);
 	svc = svc_tli_create(fd, nconf, NULL, sendsize, recvsize);
 	(void) freenetconfigent(nconf);
 	if (svc == NULL) {
