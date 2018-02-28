@@ -15,8 +15,9 @@ lib_LTLIBRARIES = libtirpc.la
 libtirpc_la_LDFLAGS = @LDFLAG_NOUNDEFINED@ -no-undefined -lpthread
 libtirpc_la_LDFLAGS += -version-info @LT_VERSION_INFO@
 
-libtirpc_la_SOURCES = auth_none.c auth_unix.c authunix_prot.c bindresvport.c clnt_bcast.c \
-        clnt_dg.c clnt_generic.c clnt_perror.c clnt_raw.c clnt_simple.c \
+libtirpc_la_SOURCES = auth_none.c auth_unix.c authunix_prot.c \
+        binddynport.c bindresvport.c \
+        clnt_bcast.c clnt_dg.c clnt_generic.c clnt_perror.c clnt_raw.c clnt_simple.c \
         clnt_vc.c rpc_dtablesize.c getnetconfig.c getnetpath.c getrpcent.c \
         getrpcport.c mt_misc.c pmap_clnt.c pmap_getmaps.c pmap_getport.c \
         pmap_prot.c pmap_prot2.c pmap_rmt.c rpc_prot.c rpc_commondata.c \
