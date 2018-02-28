@@ -53,6 +53,7 @@
 #include <rpc/svc.h>
 
 extern int __svc_vc_setflag(SVCXPRT *, int);
+extern int __binddynport(int fd);
 
 /*
  * The highest level interface for server creation.
@@ -220,15 +221,10 @@ svc_tli_create(fd, nconf, bindaddr, sendsz, recvsz)
 	 */
 	if (madefd || !__rpc_sockisbound(fd)) {
 		if (bindaddr == NULL) {
-			if (bindresvport(fd, NULL) < 0) {
-				memset(&ss, 0, sizeof ss);
-				ss.ss_family = si.si_af;
-				if (bind(fd, (struct sockaddr *)(void *)&ss,
-				    (socklen_t)si.si_alen) < 0) {
-					warnx(
+			if (__binddynport(fd) == -1) {
+				warnx(
 			"svc_tli_create: could not bind to anonymous port");
-					goto freedata;
-				}
+				goto freedata;
 			}
 			listen(fd, SOMAXCONN);
 		} else {
