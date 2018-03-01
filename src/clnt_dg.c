@@ -433,6 +433,11 @@ get_reply:
 	  char *cbuf = (char *) alloca (outlen + 256);
 	  int ret;
 
+	  if (cbuf == NULL) 
+	  {
+	  	cu->cu_error.re_errno = errno;
+		return (cu->cu_error.re_status = RPC_CANTRECV);
+	  }
 	  iov.iov_base = cbuf + 256;
 	  iov.iov_len = outlen;
 	  msg.msg_name = (void *) &err_addr;
@@ -457,11 +462,13 @@ get_reply:
 		 cmsg = CMSG_NXTHDR (&msg, cmsg))
 	      if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
 		{
+		  free(cbuf);
 		  e = (struct sock_extended_err *) CMSG_DATA(cmsg);
 		  cu->cu_error.re_errno = e->ee_errno;
 		  release_fd_lock(cu->cu_fd, mask);
 		  return (cu->cu_error.re_status = RPC_CANTRECV);
 		}
+	  free(cbuf);
 	}
 #endif
 
