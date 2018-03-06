@@ -430,7 +430,7 @@ get_reply:
 	  struct sockaddr_in err_addr;
 	  struct sockaddr_in *sin = (struct sockaddr_in *)&cu->cu_raddr;
 	  struct iovec iov;
-	  char *cbuf = (char *) alloca (outlen + 256);
+	  char *cbuf = (char *) mem_alloc((outlen + 256));
 	  int ret;
 
 	  if (cbuf == NULL) 
@@ -462,13 +462,13 @@ get_reply:
 		 cmsg = CMSG_NXTHDR (&msg, cmsg))
 	      if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
 		{
-		  free(cbuf);
+		  mem_free(cbuf, (outlen + 256));
 		  e = (struct sock_extended_err *) CMSG_DATA(cmsg);
 		  cu->cu_error.re_errno = e->ee_errno;
 		  release_fd_lock(cu->cu_fd, mask);
 		  return (cu->cu_error.re_status = RPC_CANTRECV);
 		}
-	  free(cbuf);
+	  mem_free(cbuf, (outlen + 256));
 	}
 #endif
 
