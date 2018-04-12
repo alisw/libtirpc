@@ -47,7 +47,6 @@
 
 extern bool_t __rpc_is_local_host(const char *);
 int __rpc_raise_fd(int);
-extern int __binddynport(int fd);
 
 #ifndef NETIDLEN
 #define	NETIDLEN 32
@@ -341,8 +340,7 @@ clnt_tli_create(int fd, const struct netconfig *nconf,
 		servtype = nconf->nc_semantics;
 		if (!__rpc_fd2sockinfo(fd, &si))
 			goto err;
-		if (__binddynport(fd) == -1)
-			goto err;
+		bindresvport(fd, NULL);
 	} else {
 		if (!__rpc_fd2sockinfo(fd, &si))
 			goto err;
