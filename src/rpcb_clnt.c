@@ -752,7 +752,7 @@ __try_protocol_version_2(program, version, nconf, host, tp)
 
 	client = getpmaphandle(nconf, host, &parms.r_addr);
 	if (client == NULL)
-		return (NULL);
+		goto error;
 
 	/*
 	 * Set retry timeout.
@@ -771,11 +771,11 @@ __try_protocol_version_2(program, version, nconf, host, tp)
 	if (clnt_st != RPC_SUCCESS) {
 		rpc_createerr.cf_stat = RPC_PMAPFAILURE;
 		clnt_geterr(client, &rpc_createerr.cf_error);
-		return (NULL);
+		goto error;
 	} else if (port == 0) {
 		pmapaddress = NULL;
 		rpc_createerr.cf_stat = RPC_PROGNOTREGISTERED;
-		return (NULL);
+		goto error;
 	}
 	port = htons(port);
 	CLNT_CONTROL(client, CLGET_SVC_ADDR, (char *)&remote);
@@ -789,14 +789,24 @@ __try_protocol_version_2(program, version, nconf, host, tp)
 			free(pmapaddress);
 			pmapaddress = NULL;
 		}
-		return (NULL);
+		goto error;
 	}
 	memcpy(pmapaddress->buf, remote.buf, remote.len);
 	memcpy(&((char *)pmapaddress->buf)[sizeof (short)],
 			(char *)(void *)&port, sizeof (short));
 	pmapaddress->len = pmapaddress->maxlen = remote.len;
 
+	CLNT_DESTROY(client);
 	return pmapaddress;
+
+error:
+	if (client) {
+		CLNT_DESTROY(client);
+		client = NULL;
+
+	}
+	return (NULL);
+
 }
 #endif
 
