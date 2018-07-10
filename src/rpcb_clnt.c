@@ -846,6 +846,7 @@ __rpcb_findaddr_timed(program, version, nconf, host, clpp, tp)
 	struct netbuf *address = NULL;
 	rpcvers_t start_vers = RPCBVERS4;
 	struct netbuf servaddr;
+	struct rpc_err rpcerr;
 
 	/* parameter checking */
 	if (nconf == NULL) {
@@ -902,7 +903,8 @@ __rpcb_findaddr_timed(program, version, nconf, host, clpp, tp)
 		clnt_st = CLNT_CALL(client, (rpcproc_t)RPCBPROC_GETADDR,
 		    (xdrproc_t) xdr_rpcb, (char *)(void *)&parms,
 		    (xdrproc_t) xdr_wrapstring, (char *)(void *) &ua, *tp);
-		if (clnt_st == RPC_SUCCESS) {
+		switch (clnt_st) {
+		case RPC_SUCCESS:
 			if ((ua == NULL) || (ua[0] == 0)) {
 				/* address unknown */
 				rpc_createerr.cf_stat = RPC_PROGNOTREGISTERED;
@@ -924,12 +926,15 @@ __rpcb_findaddr_timed(program, version, nconf, host, clpp, tp)
 			    (char *)(void *)&servaddr);
 			__rpc_fixup_addr(address, &servaddr);
 			goto done;
-		} else if (clnt_st == RPC_PROGVERSMISMATCH) {
-			struct rpc_err rpcerr;
+		case RPC_PROGVERSMISMATCH:
 			clnt_geterr(client, &rpcerr);
 			if (rpcerr.re_vers.low > RPCBVERS4)
 				goto error;  /* a new version, can't handle */
-		} else if (clnt_st != RPC_PROGUNAVAIL) {
+			/* Try the next lower version */
+		case RPC_PROGUNAVAIL:
+		case RPC_CANTDECODEARGS:
+			break;
+		default:
 			/* Cant handle this error */
 			rpc_createerr.cf_stat = clnt_st;
 			clnt_geterr(client, &rpc_createerr.cf_error);
