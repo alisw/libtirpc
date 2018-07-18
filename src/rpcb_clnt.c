@@ -944,7 +944,7 @@ __rpcb_findaddr_timed(program, version, nconf, host, clpp, tp)
 
 #ifdef PORTMAP 	/* Try version 2 for TCP or UDP */
 	if (strcmp(nconf->nc_protofmly, NC_INET) == 0) {
-		address = __try_protocol_version_2(program, 2, nconf, host, tp);
+		address = __try_protocol_version_2(program, version, nconf, host, tp);
 		if (address == NULL)
 			goto error;
 	}
