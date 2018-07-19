@@ -63,6 +63,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <stdint.h>
 
 #include <rpc/rpc.h>
 #include "rpc_com.h"
@@ -201,14 +202,25 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 	thr_sigsetmask(SIG_SETMASK, &newmask, &mask);
 	mutex_lock(&clnt_fd_lock);
 	if (vc_fd_locks == (int *) NULL) {
-		int cv_allocsz, fd_allocsz;
-		int dtbsize = __rpc_dtbsize();
+		size_t cv_allocsz, fd_allocsz;
+		unsigned int dtbsize = __rpc_dtbsize();
+		struct rpc_createerr *ce = &get_rpc_createerr();
+
+		if ( (size_t) dtbsize > SIZE_MAX/sizeof(cond_t)) {
+			mutex_unlock(&clnt_fd_lock);
+			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+			ce->cf_stat = RPC_SYSTEMERROR;
+			ce->cf_error.re_errno = EOVERFLOW;
+			goto err;
+		}
 
 		fd_allocsz = dtbsize * sizeof (int);
 		vc_fd_locks = (int *) mem_alloc(fd_allocsz);
 		if (vc_fd_locks == (int *) NULL) {
 			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+			ce->cf_stat = RPC_SYSTEMERROR;
+			ce->cf_error.re_errno = ENOMEM;
 			goto err;
 		} else
 			memset(vc_fd_locks, '\0', fd_allocsz);
@@ -221,6 +233,8 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 			vc_fd_locks = (int *) NULL;
 			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+			ce->cf_stat = RPC_SYSTEMERROR;
+			ce->cf_error.re_errno = ENOMEM;
 			goto err;
 		} else {
 			int i;

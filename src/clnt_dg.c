@@ -160,15 +160,22 @@ clnt_dg_create(fd, svcaddr, program, version, sendsz, recvsz)
 	thr_sigsetmask(SIG_SETMASK, &newmask, &mask);
 	mutex_lock(&clnt_fd_lock);
 	if (dg_fd_locks == (int *) NULL) {
-		int cv_allocsz;
-		size_t fd_allocsz;
-		int dtbsize = __rpc_dtbsize();
+		size_t cv_allocsz, fd_allocsz;
+		unsigned int dtbsize = __rpc_dtbsize();
+
+		if ( (size_t) dtbsize > SIZE_MAX/sizeof(cond_t)) {
+			mutex_unlock(&clnt_fd_lock);
+			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+			errno = EOVERFLOW;
+			goto err1;
+		}
 
 		fd_allocsz = dtbsize * sizeof (int);
 		dg_fd_locks = (int *) mem_alloc(fd_allocsz);
 		if (dg_fd_locks == (int *) NULL) {
 			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+			errno = ENOMEM;
 			goto err1;
 		} else
 			memset(dg_fd_locks, '\0', fd_allocsz);
@@ -180,6 +187,7 @@ clnt_dg_create(fd, svcaddr, program, version, sendsz, recvsz)
 			dg_fd_locks = (int *) NULL;
 			mutex_unlock(&clnt_fd_lock);
 			thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
+			errno = ENOMEM;
 			goto err1;
 		} else {
 			int i;
