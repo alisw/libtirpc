@@ -709,6 +709,8 @@ struct netconfig	*ncp;
     p->nc_lookups = (char **)malloc((size_t)(p->nc_nlookups+1) * sizeof(char *));
     if (p->nc_lookups == NULL) {
 	free(p->nc_netid);
+	free(p);
+	free(tmp);
 	return(NULL);
     }
     for (i=0; i < p->nc_nlookups; i++) {
