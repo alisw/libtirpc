@@ -547,6 +547,7 @@ try_nconf:
 		if (tmpnconf == NULL) {
  			rpc_createerr.cf_stat = RPC_UNKNOWNPROTO;
 			mutex_unlock(&loopnconf_lock);
+			endnetconfig(nc_handle);
 			return (NULL);
 		}
 		loopnconf = getnetconfigent(tmpnconf->nc_netid);
