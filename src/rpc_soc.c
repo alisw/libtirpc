@@ -663,8 +663,10 @@ svcunix_create(sock, sendsize, recvsize, path)
 		    strcmp(nconf->nc_protofmly, NC_LOOPBACK) == 0)
 			break;
 	}
-	if (nconf == NULL)
+	if (nconf == NULL) {
+		endnetconfig(localhandle);
 		return(xprt);
+	}
 
 	if ((sock = __rpc_nconf2fd(nconf)) < 0)
 		goto done;
@@ -692,6 +694,8 @@ svcunix_create(sock, sendsize, recvsize, path)
 	}
 
 	xprt = (SVCXPRT *)svc_tli_create(sock, nconf, &taddr, sendsize, recvsize);
+	if (xprt == NULL)
+		close(sock);
 
 done:
 	endnetconfig(localhandle);
