@@ -593,7 +593,7 @@ _rpc_gss_refresh(AUTH *auth, rpc_gss_options_ret_t *options_ret)
 			if (rpc_gss_oid_to_mech(actual_mech_type, &mechanism)) {
 				strncpy(options_ret->actual_mechanism,
 					mechanism,
-					sizeof(options_ret->actual_mechanism));
+					(sizeof(options_ret->actual_mechanism)-1));
 			}
 
 			gd->established = TRUE;
