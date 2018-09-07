@@ -113,6 +113,7 @@ svc_create(dispatch, prognum, versnum, nettype)
 				if (l == NULL) {
 					warnx("svc_create: no memory");
 					mutex_unlock(&xprtlist_lock);
+					__rpc_endconf(handle);
 					return (0);
 				}
 				l->xprt = xprt;
