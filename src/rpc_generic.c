@@ -319,6 +319,7 @@ __rpc_setconf(nettype)
 		handle->nflag = FALSE;
 		break;
 	default:
+		free(handle);
 		return (NULL);
 	}
 
