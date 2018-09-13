@@ -325,8 +325,6 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz)
 	recvsz = __rpc_get_t_size(si.si_af, si.si_proto, (int)recvsz);
 	xdrrec_create(&(ct->ct_xdrs), sendsz, recvsz,
 	    cl->cl_private, read_vc, write_vc);
-	mem_free(ct->ct_addr.buf, ct->ct_addr.len);
-	mem_free(ct, sizeof (struct ct_data));
 	return (cl);
 
 err:
