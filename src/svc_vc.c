@@ -502,9 +502,14 @@ read_vc(xprtp, buf, len)
 	cfp = (struct cf_conn *)xprt->xp_p1;
 
 	if (cfp->nonblock) {
+		/* Since len == 0 is returned on zero length
+		 * read or EOF errno needs to be reset before
+		 * the read
+		 */
+		errno = 0;
 		len = read(sock, buf, (size_t)len);
 		if (len < 0) {
-			if (errno == EAGAIN)
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
 				len = 0;
 			else
 				goto fatal_err;
