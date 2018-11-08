@@ -100,7 +100,7 @@ _rpcdata()
 	return (d);
 }
 
-#if !HAVE_GETRPCBYNYMBER
+#if !HAVE_GETRPCBYNUMBER
 struct rpcent *
 getrpcbynumber(number)
 	int number;
