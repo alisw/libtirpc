@@ -104,7 +104,7 @@ static int uaddr_to_sockaddr(uaddr, sin)
 	p_bytes[1] = (unsigned char)a[5] & 0x000000FF;
 
 	sin->sin_family = AF_INET; /* always */
-	bcopy((char *)&p_bytes, (char *)&sin->sin_port, 2);
+	memcpy((char *)&sin->sin_port, (char *)&p_bytes, 2);
 
 	return (0);
 }
