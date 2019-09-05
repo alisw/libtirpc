@@ -334,8 +334,11 @@ err:
 				mem_free(ct->ct_addr.buf, ct->ct_addr.len);
 			mem_free(ct, sizeof (struct ct_data));
 		}
-		if (cl)
-			mem_free(cl, sizeof (CLIENT));
+		mem_free(cl, sizeof (CLIENT));
+	} else if (ct) {
+		if (ct->ct_addr.len)
+			mem_free(ct->ct_addr.buf, ct->ct_addr.len);
+		mem_free(ct, sizeof (struct ct_data));
 	}
 	return ((CLIENT *)NULL);
 }
