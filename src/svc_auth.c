@@ -114,9 +114,11 @@ _gss_authenticate(rqst, msg, no_dispatch)
 	case AUTH_SHORT:
 		dummy = _svcauth_short(rqst, msg);
 		return (dummy);
+#ifdef AUTHDES_SUPPORT
 	case AUTH_DES:
 		dummy = _svcauth_des(rqst, msg);
 		return (dummy);
+#endif
 #ifdef HAVE_RPCSEC_GSS
 	case RPCSEC_GSS:
 		dummy = _svcauth_gss(rqst, msg, no_dispatch);

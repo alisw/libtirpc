@@ -516,6 +516,7 @@ clnt_broadcast(prog, vers, proc, xargs, argsp, xresults, resultsp, eachresult)
 	    (resultproc_t) rpc_wrap_bcast, "udp");
 }
 
+#ifdef AUTHDES_SUPPORT
 /*
  * Create the client des authentication object. Obsoleted by
  * authdes_seccreate().
@@ -594,6 +595,7 @@ authdes_pk_create(servername, pkey, window, syncaddr, ckey)
 fallback:
 	return authdes_pk_seccreate(servername, pkey, window, NULL, ckey, NULL);
 }
+#endif
 
 
 /*

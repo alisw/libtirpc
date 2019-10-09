@@ -53,6 +53,14 @@ if test "x$enable_gssapi" = xyes; then
 	AC_SUBST([GSSAPI_LIBS])
 fi
 
+AC_ARG_ENABLE(authdes,
+	[AC_HELP_STRING([--enable-authdes], [Enable AUTH_DES support @<:@default=no@:>@])],
+      [],[enable_authdes=no])
+AM_CONDITIONAL(AUTHDES, test "x$enable_authdes" = xyes)
+if test "x$enable_authdes" != xno; then
+	AC_DEFINE(AUTHDES_SUPPORT, 1, [Define if AUTH_DES is support])
+fi
+
 AC_ARG_ENABLE(ipv6,
 	[AC_HELP_STRING([--disable-ipv6], [Disable IPv6 support @<:@default=no@:>@])],
 	[],[enable_ipv6=yes])
