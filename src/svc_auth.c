@@ -114,10 +114,12 @@ _gss_authenticate(rqst, msg, no_dispatch)
 	case AUTH_SHORT:
 		dummy = _svcauth_short(rqst, msg);
 		return (dummy);
-#ifdef AUTHDES_SUPPORT
 	case AUTH_DES:
+#ifdef AUTHDES_SUPPORT
 		dummy = _svcauth_des(rqst, msg);
 		return (dummy);
+#else
+		return (AUTH_FAILED);
 #endif
 #ifdef HAVE_RPCSEC_GSS
 	case RPCSEC_GSS:
@@ -178,6 +180,9 @@ svc_auth_reg(cred_flavor, handler)
 	    case AUTH_SYS:
 	    case AUTH_SHORT:
 	    case AUTH_DES:
+#ifndef AUTHDES_SUPPORT
+		return(-1);
+#endif
 #ifdef HAVE_RPCSEC_GSS
 	    case RPCSEC_GSS:
 #endif

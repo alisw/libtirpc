@@ -595,6 +595,24 @@ authdes_pk_create(servername, pkey, window, syncaddr, ckey)
 fallback:
 	return authdes_pk_seccreate(servername, pkey, window, NULL, ckey, NULL);
 }
+#else
+AUTH *
+authdes_create(servername, window, syncaddr, ckey)
+	char *servername;		/* network name of server */
+	u_int window;			/* time to live */
+	struct sockaddr *syncaddr;	/* optional hostaddr to sync with */
+	des_block *ckey;		/* optional conversation key to use */
+{ return (NULL); }
+
+AUTH *
+authdes_pk_create(servername, pkey, window, syncaddr, ckey)
+	char *servername;		/* network name of server */
+	netobj *pkey;			/* public key */
+	u_int window;			/* time to live */
+	struct sockaddr *syncaddr;	/* optional hostaddr to sync with */
+	des_block *ckey;		/* optional conversation key to use */
+{ return (NULL); }
+
 #endif
 
 
