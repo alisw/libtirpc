@@ -477,7 +477,7 @@ _rpc_gss_refresh(AUTH *auth, rpc_gss_options_ret_t *options_ret)
 	for (;;) {
 		/* print the token we just received */
 		if (recv_tokenp != GSS_C_NO_BUFFER) {
-			gss_log_debug("The token we just received (length %d):",
+			gss_log_debug("The token we just received (length %lu):",
 				  recv_tokenp->length);
 			gss_log_hexdump(recv_tokenp->value, recv_tokenp->length, 0);
 		}
@@ -510,7 +510,7 @@ _rpc_gss_refresh(AUTH *auth, rpc_gss_options_ret_t *options_ret)
 			memset(&gr, 0, sizeof(gr));
 
 			/* print the token we are about to send */
-			gss_log_debug("The token being sent (length %d):",
+			gss_log_debug("The token being sent (length %lu):",
 				  send_token.length);
 			gss_log_hexdump(send_token.value, send_token.length, 0);
 
