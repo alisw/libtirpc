@@ -8,6 +8,7 @@
 631     # cups
 636     # ldaps
 664     # Secure ASF, used by IPMI on some cards
+774     # rpasswd
 921     # lwresd
 993     # imaps
 995     # pops
