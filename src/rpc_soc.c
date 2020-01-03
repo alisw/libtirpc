@@ -613,6 +613,13 @@ authdes_pk_create(servername, pkey, window, syncaddr, ckey)
 	des_block *ckey;		/* optional conversation key to use */
 { return (NULL); }
 
+AUTH *
+authdes_seccreate(const char *servername, const u_int win,
+	const char *timehost, const des_block *ckey)
+{
+	return (NULL);
+}
+
 #endif
 
 
