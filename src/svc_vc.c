@@ -243,7 +243,7 @@ svc_fd_create(fd, sendsize, recvsize)
 		goto freedata;
 	}
 	if (!__rpc_set_netbuf(&ret->xp_rtaddr, &ss, sizeof(ss))) {
-		warnx("svc_fd_create: no mem for local addr");
+		warnx("svc_fd_create: no mem for remote addr");
 		goto freedata;
 	}
 
@@ -253,9 +253,10 @@ svc_fd_create(fd, sendsize, recvsize)
 	return ret;
 
 freedata:
-	if (ret->xp_ltaddr.buf != NULL)
+	if (ret->xp_ltaddr.buf != NULL) {
 		mem_free(ret->xp_ltaddr.buf, rep->xp_ltaddr.maxlen);
-
+		ret->xp_ltaddr.buf = NULL;
+	}
 	return NULL;
 }
 
