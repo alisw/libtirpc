@@ -632,20 +632,18 @@ static void
 clnt_vc_destroy(cl)
 	CLIENT *cl;
 {
+	assert(cl != NULL);
 	struct ct_data *ct = (struct ct_data *) cl->cl_private;
 	int ct_fd = ct->ct_fd;
+	fd_lock_t *ct_fd_lock = ct->ct_fd_lock;
 	sigset_t mask;
 	sigset_t newmask;
-
-	assert(cl != NULL);
-
-	ct = (struct ct_data *) cl->cl_private;
 
 	sigfillset(&newmask);
 	thr_sigsetmask(SIG_SETMASK, &newmask, &mask);
 	mutex_lock(&clnt_fd_lock);
-	while (ct->ct_fd_lock->active)
-		cond_wait(&ct->ct_fd_lock->cv, &clnt_fd_lock);
+	while (ct_fd_lock->active)
+		cond_wait(&ct_fd_lock->cv, &clnt_fd_lock);
 	if (ct->ct_closeit && ct->ct_fd != -1) {
 		(void)close(ct->ct_fd);
 	}
@@ -658,8 +656,8 @@ clnt_vc_destroy(cl)
 	if (cl->cl_tp && cl->cl_tp[0])
 		mem_free(cl->cl_tp, strlen(cl->cl_tp) +1);
 	mem_free(cl, sizeof(CLIENT));
-	cond_signal(&ct->ct_fd_lock->cv);
-	fd_lock_destroy(ct_fd, ct->ct_fd_lock, vc_fd_locks);
+	cond_signal(&ct_fd_lock->cv);
+	fd_lock_destroy(ct_fd, ct_fd_lock, vc_fd_locks);
 	mutex_unlock(&clnt_fd_lock);
 	thr_sigsetmask(SIG_SETMASK, &(mask), NULL);
 }

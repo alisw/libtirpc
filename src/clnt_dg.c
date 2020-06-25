@@ -725,14 +725,15 @@ clnt_dg_destroy(cl)
 {
 	struct cu_data *cu = (struct cu_data *)cl->cl_private;
 	int cu_fd = cu->cu_fd;
+	fd_lock_t *cu_fd_lock = cu->cu_fd_lock;
 	sigset_t mask;
 	sigset_t newmask;
 
 	sigfillset(&newmask);
 	thr_sigsetmask(SIG_SETMASK, &newmask, &mask);
 	mutex_lock(&clnt_fd_lock);
-	while (cu->cu_fd_lock->active)
-		cond_wait(&cu->cu_fd_lock->cv, &clnt_fd_lock);
+	while (cu_fd_lock->active)
+		cond_wait(&cu_fd_lock->cv, &clnt_fd_lock);
 	if (cu->cu_closeit)
 		(void)close(cu_fd);
 	XDR_DESTROY(&(cu->cu_outxdrs));
@@ -742,8 +743,8 @@ clnt_dg_destroy(cl)
 	if (cl->cl_tp && cl->cl_tp[0])
 		mem_free(cl->cl_tp, strlen(cl->cl_tp) +1);
 	mem_free(cl, sizeof (CLIENT));
-	cond_signal(&cu->cu_fd_lock->cv);
-	fd_lock_destroy(cu_fd, cu->cu_fd_lock, dg_fd_locks);
+	cond_signal(&cu_fd_lock->cv);
+	fd_lock_destroy(cu_fd, cu_fd_lock, dg_fd_locks);
 	mutex_unlock(&clnt_fd_lock);
 	thr_sigsetmask(SIG_SETMASK, &mask, NULL);
 }

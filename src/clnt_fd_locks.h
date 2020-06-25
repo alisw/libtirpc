@@ -114,6 +114,7 @@ fd_locks_t* fd_locks_init() {
 	}
 
 	if ( (size_t) fd_locks_prealloc > SIZE_MAX/sizeof(fd_lock_t)) {
+		mem_free(fd_locks, sizeof (*fd_locks));
 		errno = EOVERFLOW;
 		return (NULL);
 	}
@@ -121,6 +122,7 @@ fd_locks_t* fd_locks_init() {
 	fd_lock_arraysz = fd_locks_prealloc * sizeof (fd_lock_t);
 	fd_locks->fd_lock_array = (fd_lock_t *) mem_alloc(fd_lock_arraysz);
 	if (fd_locks->fd_lock_array == (fd_lock_t *) NULL) {
+		mem_free(fd_locks, sizeof (*fd_locks));
 		errno = ENOMEM;
 		return (NULL);
 	}
@@ -162,7 +164,7 @@ fd_lock_t* fd_lock_create(int fd, fd_locks_t *fd_locks) {
 		return &fd_locks->fd_lock_array[fd];
 	}
 #endif
-	fd_lock_item_t* item;
+	fd_lock_item_t *item;
 	fd_lock_list_t *list = to_fd_lock_list(fd_locks);
 
 	for (item = TAILQ_FIRST(list);
